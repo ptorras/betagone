@@ -26,10 +26,10 @@ vores = edge(im_test, 'Canny');
                                     % theta -> Angles emprats
                                     % rho -> valors rho assolits
 
-pics = houghpeaks(H, 30);
+pics = houghpeaks(H, 18);
 n_pics = numel(pics(:,1));
 
-linies = houghlines(vores, theta, rho, pics);
+linies = houghlines(vores, theta, rho, pics, 'FillGap', max(dimension), 'MinLength', 100);
 
 figure();
 
