@@ -13,8 +13,15 @@ dimension = size(im_test);
 im_test = im_test( floor(dimension(1) * 0.24) : floor(dimension(1) * 0.76) ...
     , floor(dimension(2) * 0.05) : floor(dimension(2) * 0.99));
 
+figure();
+imshow(im_test, []);
+
+% Binaritzacio de la imatge
+
+im_test = double(im_test > graythresh(im_test)*255)*255;
+
 % Aplicar deteccio de vores
-vores = edge(im_test, 'Sobel');
+vores = edge(im_test, 'Canny');
 [H, theta, rho] = hough(vores);     % H -> Matriu Hough
                                     % theta -> Angles emprats
                                     % rho -> valors rho assolits
