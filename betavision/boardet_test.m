@@ -5,20 +5,21 @@ close all
 
 % Carregar fitxer qualsevol
 
-filepath = fullfile('.', 'testpic', 'P_20200306_184440_vHDR_On.jpg');
-im_test = double(rgb2gray(imread(filepath)));
+filepath = fullfile('.', 'testpic', 'P_20200306_184020_vHDR_On.jpg');
+im_test = rgb2gray(imread(filepath));
+im_test = double(imresize(im_test, floor(size(im_test) .* 0.35)));
 
 dimension = size(im_test);
 
 im_test = im_test( floor(dimension(1) * 0.24) : floor(dimension(1) * 0.76) ...
-    , floor(dimension(2) * 0.05) : floor(dimension(2) * 0.99));
+    , floor(dimension(2) * 0.07) : floor(dimension(2) * 0.99));
 
 figure();
 imshow(im_test, []);
 
 % Binaritzacio de la imatge
 
-im_test = double(im_test > graythresh(im_test)*255)*255;
+%im_test = double(im_test > graythresh(im_test)*255)*255;
 
 % Aplicar deteccio de vores
 vores = edge(im_test, 'Canny');
@@ -46,6 +47,10 @@ hold on;
 
 for i=1:length(linies)
    xy = [linies(i).point1; linies(i).point2];
-   plot(xy(:,1), xy(:,2), 'LineWidth', 3, 'Color', 'blue');
+   plot(xy(:,1), xy(:,2), 'LineWidth', 3, 'Color', 'red');
    hold on;
 end
+
+
+% Tallar la imatge
+
