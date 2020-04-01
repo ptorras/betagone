@@ -87,6 +87,9 @@ class Board:
     KNIGHT_MOVES = [[ 2, -1], [ 2,  1], [ 1,  2], [-1,  2],
                     [-2,  1], [-2, -1], [-1, -2], [ 1, -2]]     # Knight moving scheme
 
+    KING_MOVES = [[1, -1], [1, 0], [1, 1], [0, 1],
+                  [-1, 1], [-1, 0], [-1, -1], [0, -1]]          # King moving scheme
+
     def __init__(self, board=None):
         # Copy of an existing board
         if board is not None:
@@ -254,6 +257,8 @@ class Board:
 
     def __bishp_moves(self, row, col):
         moves = []
+        for i in range(8):
+            pass
 
     def __rook_moves(self, row, col):
         pass
@@ -261,8 +266,25 @@ class Board:
     def __queen_moves(self, row, col):
         pass
 
-    def __king_moves(self, row, col):
-        pass
+    def __king_moves(self, row, col, freesq, enemsq):
+        moves = []
+        for square in self.KING_MOVES:
+            newrow = row + square[0]
+            newcol = col + square[1]
+            if 0 <= newrow < 8 and 0 <= newcol < 8 and (freesq[newrow][newcol] or enemsq[newrow][newcol]):
+                moves.append(Movement(row, col, newrow, newcol))
+
+        if self.turn == 'w' and self.castling.find('K') > 0:
+            pass
+        if self.turn == 'w' and self.castling.find('Q') > 0:
+            pass
+
+        if self.turn == 'b' and self.castling.find('k') > 0:
+            pass
+        if self.turn == 'b' and self.castling.find('q') > 0:
+            pass
+
+        return moves
 
     def __enemysquares(self):
         """
@@ -296,6 +318,10 @@ class Board:
                     # Knights
                     if self.board[i][j] == self.WKNGHT or self.board[i][j] == self.BKNGHT:
                         currentmoves += self.__knight_moves(i, j, freesq, enemsq)
+
+                    # King
+                    if self.board[i][j] == self.WKING or self.board[i][j] == self.BKING:
+                        currentmoves += self.__king_moves(i, j, freesq, enemsq)
 
         return currentmoves
 
