@@ -82,6 +82,17 @@ class Board:
         EMPTY: '  '
     }
 
+    TRANSLATE_FEN = {
+        'P': WPAWN, 'p': BPAWN,
+        'N': WKNGHT, 'n': BKNGHT,
+        'B': WBSHP, 'b': BBSHP,
+        'R': WROOK, 'r': BROOK,
+        'Q': WQUEEN, 'q': BQUEEN,
+        'K': WKING, 'k': BKING,
+    }
+
+    FEN_MODES = ['board', 'turn', 'castling', 'enpassant', 'ftymove', 'move']
+
     COLOR_MASK = 0xF0
 
     KNIGHT_MOVES = [[ 2, -1], [ 2,  1], [ 1,  2], [-1,  2],
@@ -98,6 +109,7 @@ class Board:
             self.turn = deepcopy(board.turn)
             self.castling = deepcopy(board.castling)
             self.move = board.move
+            self.fiftymove = board.fiftymove
 
         # Default formatting
         else:
@@ -113,6 +125,7 @@ class Board:
             self.turn = 'w'
             self.castling = 'QKqk'
             self.move = 0
+            self.fiftymove = 0
 
     def __str__(self):
         out = "=============================================\n"
@@ -131,11 +144,51 @@ class Board:
         out += "ENROC: " + self.castling + '\n'
         out += "AL PAS: " + str(self.enpassant) + '\n'
         out += "TORN: " + self.turn + '\n'
+        out += "RECOMPTE DES D'ULTIMA CAPTURA: " + str(self.fiftymove) + '\n'
         out += "=============================================\n"
         return out
 
     def __repr__(self):
         return str(self)
+
+    def from_fen(self, fen):
+        self.enpassant = [-1, -1]
+        self.castling = ''
+
+        board = [[]]
+        row = 0
+        mode = 0
+
+        for ch in fen:
+            if ch == ' ':
+                mode += 1
+            else:
+                if self.FEN_MODES[mode] == 'board':
+                    if ch == '/':
+                        board.insert(0, [])
+                        row += 1
+                    elif 'A' <= ch <= 'z':
+                        board[0].append(self.TRANSLATE_FEN[ch])
+                    else:
+                        for _ in range(int(ch)):
+                            board[0].append(self.EMPTY)
+                elif self.FEN_MODES[mode] == 'turn':
+                    self.turn = ch
+                elif self.FEN_MODES[mode] == 'castling':
+                    self.castling += ch
+                elif self.FEN_MODES[mode] == 'enpassant':
+                    if ch == '-':
+                        self.enpassant = None
+                    else:
+                        if 'a' <= ch <= 'h':
+                            self.enpassant[0] = ord(ch) - ord('a')
+                        else:
+                            self.enpassant[1] = int(ch)
+                elif self.FEN_MODES[mode] == 'ftymove':
+                    self.fiftymove = int(ch)
+                elif self.FEN_MODES[mode] == 'move':
+                    self.move = int(ch)
+        self.board = board
 
     def __wpawn_moves(self, row, col, possiblesq, enemysq):
         """
@@ -255,16 +308,110 @@ class Board:
                 moves.append(Movement(row, col, newrow, newcol))
         return moves
 
-    def __bishp_moves(self, row, col):
+    def __bishp_moves(self, row, col, freesq, enemsq):
         moves = []
-        for i in range(8):
-            pass
+        nw = True; ne = True
+        sw = True; se = True
 
-    def __rook_moves(self, row, col):
-        pass
+        for i in range(1, 8):
+            if nw:
+                if (0 <= row + i < 8) and (0 <= col + i < 8):
+                    if freesq[row+i, col+i] or enemsq[row+i, col+i]:
+                        moves.append(Movement(row, col, row+i, col+i))
+                        if enemsq[row+i, col+i]:
+                            sw = False
+                    else:
+                        nw = False
+                else:
+                    nw = False
+            if ne:
+                if (0 <= row + i < 8) and (0 <= col - i < 8):
+                    if freesq[row+i, col-i] or enemsq[row+i, col-i]:
+                        moves.append(Movement(row, col, row+i, col-i))
+                        if enemsq[row+i, col-i]:
+                            sw = False
+                    else:
+                        ne = False
+                else:
+                    ne = False
 
-    def __queen_moves(self, row, col):
-        pass
+            if sw:
+                if (0 <= row - i < 8) and (0 <= col + i < 8):
+                    if freesq[row-i, col+i] or enemsq[row-i, col+i]:
+                        moves.append(Movement(row, col, row-i, col+i))
+                        if enemsq[row-i, col+i]:
+                            sw = False
+                    else:
+                        sw = False
+                else:
+                    sw = False
+            if se:
+                if (0 <= row - i < 8) and (0 <= col - i < 8):
+                    if freesq[row-i, col-i] or enemsq[row-i, col-i]:
+                        moves.append(Movement(row, col, row-i, col-i))
+                        if enemsq[row-i, col-i]:
+                            sw = False
+                    else:
+                        se = False
+                else:
+                    se = False
+        return moves
+
+
+    def __rook_moves(self, row, col, freesq, enemsq):
+        moves = []
+        nn = True; ss = True
+        ee = True; ww = True
+
+        for i in range(1, 8):
+            if ww:
+                if 0 <= col + i < 8:
+                    if freesq[row, col + i] or enemsq[row, col + i]:
+                        moves.append(Movement(row, col, row, col + i))
+                        if enemsq[row, col + i]:
+                            ww = False
+                    else:
+                        ww = False
+                else:
+                    ww = False
+            if ee:
+                if 0 <= col - i < 8:
+                    if freesq[row, col - i] or enemsq[row, col - i]:
+                        moves.append(Movement(row, col, row, col - i))
+                        if enemsq[row, col - i]:
+                            ee = False
+                    else:
+                        ee = False
+                else:
+                    ee = False
+
+            if ss:
+                if 0 <= row - i < 8:
+                    if freesq[row - i, col] or enemsq[row - i, col]:
+                        moves.append(Movement(row, col, row - i, col))
+                        if enemsq[row - i, col]:
+                            ss = False
+                    else:
+                        ss = False
+                else:
+                    ss = False
+            if nn:
+                if 0 <= row + i < 8:
+                    if freesq[row + i, col] or enemsq[row + i, col]:
+                        moves.append(Movement(row, col, row + i, col))
+                        if enemsq[row + i, col]:
+                            nn = False
+                    else:
+                        nn = False
+                else:
+                    nn = False
+        return moves
+
+    def __queen_moves(self, row, col, freesq, enemsq):
+        moves = self.__rook_moves(row, col, freesq, enemsq)
+        moves += self.__bishp_moves(row, col, freesq, enemsq)
+
+        return moves
 
     def __king_moves(self, row, col, freesq, enemsq):
         moves = []
@@ -318,6 +465,18 @@ class Board:
                     # Knights
                     if self.board[i][j] == self.WKNGHT or self.board[i][j] == self.BKNGHT:
                         currentmoves += self.__knight_moves(i, j, freesq, enemsq)
+
+                    # Bishops
+                    if self.board[i][j] == self.WBSHP or self.board[i][j] == self.BBSHP:
+                        currentmoves += self.__bishp_moves(i, j, freesq, enemsq)
+
+                    # Rooks
+                    if self.board[i][j] == self.WROOK or self.board[i][j] == self.BROOK:
+                        currentmoves += self.__rook_moves(i, j, freesq, enemsq)
+
+                    # Queen(s)
+                    if self.board[i][j] == self.WQUEEN or self.board[i][j] == self.BQUEEN:
+                        currentmoves += self.__queen_moves(i, j, freesq, enemsq)
 
                     # King
                     if self.board[i][j] == self.WKING or self.board[i][j] == self.BKING:
