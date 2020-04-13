@@ -152,6 +152,21 @@ class Board:
         return str(self)
 
     def from_fen(self, fen):
+        """
+        Sets the current board to the position represented by a FEN formatted
+        string
+
+        Parameters
+        ----------
+        fen: str
+            A Forsyth-Edwards Notation string with the position
+
+        Returns
+        -------
+        None
+            (modifies current object)
+
+        """
         self.enpassant = [-1, -1]
         self.castling = ''
 
@@ -160,9 +175,13 @@ class Board:
         mode = 0
 
         for ch in fen:
+
+            # A space separates sections of the FEN string
             if ch == ' ':
                 mode += 1
             else:
+
+                # Reading the board state itself
                 if self.FEN_MODES[mode] == 'board':
                     if ch == '/':
                         board.insert(0, [])
@@ -172,23 +191,35 @@ class Board:
                     else:
                         for _ in range(int(ch)):
                             board[0].append(self.EMPTY)
+
+                # Reading the playing side
                 elif self.FEN_MODES[mode] == 'turn':
                     self.turn = ch
+
+                # Setting castling rights
                 elif self.FEN_MODES[mode] == 'castling':
-                    self.castling += ch
+                    if ch != '-':
+                        self.castling += ch
+
+                # Identifying en passant square
                 elif self.FEN_MODES[mode] == 'enpassant':
                     if ch == '-':
                         self.enpassant = None
                     else:
                         if 'a' <= ch <= 'h':
-                            self.enpassant[0] = ord(ch) - ord('a')
+                            self.enpassant[1] = ord(ch) - ord('a')
                         else:
-                            self.enpassant[1] = int(ch)
+                            self.enpassant[0] = int(ch) - 1
+
+                # Setting the fifty move rule counter
                 elif self.FEN_MODES[mode] == 'ftymove':
                     self.fiftymove = int(ch)
+
+                # Setting the current move counter
                 elif self.FEN_MODES[mode] == 'move':
                     self.move = int(ch)
-        self.board = board
+
+        self.board = np.array(board)
 
     def __wpawn_moves(self, row, col, possiblesq, enemysq):
         """
@@ -300,6 +331,26 @@ class Board:
         return moves
 
     def __knight_moves(self, row, col, freesq, enemsq):
+        """
+        Knight move generator
+
+        Parameters
+        ----------
+        row : int
+            Row of current knight
+        col : int
+            Column of current knight
+        possiblesq : np.array : bool
+            A boolean matrix that shows empty squares
+        enemysq : np.array : bool
+            A boolean matrix that shows enemy piece placement
+
+
+        Returns
+        -------
+        list : Movement
+            A list of all possible movements of the current knight
+        """
         moves = []
         for square in self.KNIGHT_MOVES:
             newrow = row + square[0]
@@ -309,6 +360,26 @@ class Board:
         return moves
 
     def __bishp_moves(self, row, col, freesq, enemsq):
+        """
+        Bishop move generator
+
+        Parameters
+        ----------
+        row : int
+            Row of current bishop
+        col : int
+            Column of current bishop
+        possiblesq : np.array : bool
+            A boolean matrix that shows empty squares
+        enemysq : np.array : bool
+            A boolean matrix that shows enemy piece placement
+
+
+        Returns
+        -------
+        list : Movement
+            A list of all possible movements of the current bishop
+        """
         moves = []
         nw = True; ne = True
         sw = True; se = True
@@ -359,6 +430,26 @@ class Board:
 
 
     def __rook_moves(self, row, col, freesq, enemsq):
+        """
+        Rook move generator
+
+        Parameters
+        ----------
+        row : int
+            Row of current rook
+        col : int
+            Column of current rook
+        possiblesq : np.array : bool
+            A boolean matrix that shows empty squares
+        enemysq : np.array : bool
+            A boolean matrix that shows enemy piece placement
+
+
+        Returns
+        -------
+        list : Movement
+            A list of all possible movements of the current rook
+        """
         moves = []
         nn = True; ss = True
         ee = True; ww = True
@@ -408,12 +499,52 @@ class Board:
         return moves
 
     def __queen_moves(self, row, col, freesq, enemsq):
+        """
+        Queen move generator. It basically calls for bishop and rook movement
+
+        Parameters
+        ----------
+        row : int
+            Row of current queen
+        col : int
+            Column of current queen
+        possiblesq : np.array : bool
+            A boolean matrix that shows empty squares
+        enemysq : np.array : bool
+            A boolean matrix that shows enemy piece placement
+
+
+        Returns
+        -------
+        list : Movement
+            A list of all possible movements of the current queen
+        """
         moves = self.__rook_moves(row, col, freesq, enemsq)
         moves += self.__bishp_moves(row, col, freesq, enemsq)
 
         return moves
 
     def __king_moves(self, row, col, freesq, enemsq):
+        """
+        King move generator.
+
+        Parameters
+        ----------
+        row : int
+            Row of current king
+        col : int
+            Column of current king
+        possiblesq : np.array : bool
+            A boolean matrix that shows empty squares
+        enemysq : np.array : bool
+            A boolean matrix that shows enemy piece placement
+
+
+        Returns
+        -------
+        list : Movement
+            A list of all possible movements of the current king
+        """
         moves = []
         for square in self.KING_MOVES:
             newrow = row + square[0]
@@ -421,15 +552,17 @@ class Board:
             if 0 <= newrow < 8 and 0 <= newcol < 8 and (freesq[newrow][newcol] or enemsq[newrow][newcol]):
                 moves.append(Movement(row, col, newrow, newcol))
 
-        if self.turn == 'w' and self.castling.find('K') > 0:
-            pass
-        if self.turn == 'w' and self.castling.find('Q') > 0:
-            pass
+        if self.turn == 'w' and self.castling.find('K') and self.board[0, 5] == self.board[0, 6] == self.EMPTY:
+            moves.append(Movement(0, 4, 0, 6))
+        if self.turn == 'w' and self.castling.find('Q') and \
+                self.board[0, 3] == self.board[0, 2] == self.board[0, 1] == self.EMPTY:
+            moves.append(Movement(0, 4, 0, 2))
 
-        if self.turn == 'b' and self.castling.find('k') > 0:
-            pass
-        if self.turn == 'b' and self.castling.find('q') > 0:
-            pass
+        if self.turn == 'b' and self.castling.find('k') and self.board[7, 5] == self.board[7, 6] == self.EMPTY:
+            moves.append(Movement(7, 4, 7, 6))
+        if self.turn == 'b' and self.castling.find('q') and \
+                self.board[7, 3] == self.board[7, 2] == self.board[7, 1] == self.EMPTY:
+            moves.append(Movement(7, 4, 7, 2))
 
         return moves
 
@@ -449,6 +582,15 @@ class Board:
             return np.logical_and(self.board, np.logical_not(np.bitwise_and(self.board, self.COLOR_MASK)))
 
     def gen_allmoves(self):
+        """
+        Generates all possible moves of the current playing side without
+        considering its legality.
+
+        Returns
+        -------
+        list: Movement
+            A list of all possible moves
+        """
         currentmoves = []
         freesq = np.equal(self.board, 0x00)
         enemsq = self.__enemysquares()
@@ -491,9 +633,92 @@ class Board:
         pass
 
     def makemove(self, movement: Movement):
-        self.move += 1
+        """
+        Performs a Movement onto the board while also updating all supporting
+        variables (castling rights, turn, fifty move rule, en passant square)
+
+        Parameters
+        ----------
+        movement: Movement
+            A Movement object representing the move that should be performed
+
+        Returns
+        -------
+        None
+
+        """
+        if self.turn == 'w':
+            self.turn = 'b'
+            self.move += 1
+        else:
+            self.turn = 'w'
+
+        # Fifty Move Rule and En Passant
+        if self.board[movement.orow, movement.ocol] == self.BPAWN or self.board[movement.orow, movement.ocol] == self.WPAWN:
+            self.fiftymove = 0
+            if abs(movement.drow - movement.orow) == 2:
+                self.enpassant = [movement.drow-1 if self.board[movement.orow, movement.ocol] == self.WPAWN else movement.drow + 1, movement.dcol]
+            elif self.enpassant is not None:
+                if movement.drow == self.enpassant[0] and movement.dcol == self.enpassant[1]:
+                    self.board[movement.drow, movement.dcol] = self.board[movement.orow, movement.ocol]
+                    self.board[movement.orow, movement.dcol] = self.EMPTY
+                self.enpassant = None
+            else:
+                self.enpassant = None
+
+        elif self.board[movement.drow, movement.dcol] != self.EMPTY:
+            self.fiftymove = 0
+            self.enpassant = None
+        else:
+            self.fiftymove += 1
+            self.enpassant = None
+
+        # Castling right management
+        if self.board[movement.orow, movement.ocol] == self.WKING:
+            if movement.orow == 0 and movement.ocol == 4:
+                if movement.drow == 0 and movement.dcol == 6 and 'K' in self.castling:
+                    self.board[movement.drow, movement.dcol] = self.WKING
+                    self.board[0, 5] = self.WROOK
+                    self.board[0, 7] = self.EMPTY
+
+                elif movement.drow == 0 and movement.dcol == 2 and 'Q' in self.castling:
+                    self.board[movement.drow, movement.dcol] = self.WKING
+                    self.board[0, 3] = self.WROOK
+                    self.board[0, 0] = self.EMPTY
+
+            self.castling.replace('Q', '')
+            self.castling.replace('K', '')
+
+        if self.board[movement.orow, movement.ocol] == self.BKING:
+            if movement.orow == 7 and movement.ocol == 4:
+                if movement.drow == 7 and movement.dcol == 6 and 'k' in self.castling:
+                    self.board[movement.drow, movement.dcol] = self.BKING
+                    self.board[7, 5] = self.BROOK
+                    self.board[7, 7] = self.EMPTY
+
+                elif movement.drow == 7 and movement.dcol == 2 and 'q' in self.castling:
+                    self.board[movement.drow, movement.dcol] = self.BKING
+                    self.board[7, 3] = self.BROOK
+                    self.board[7, 0] = self.EMPTY
+
+            self.castling.replace('k', '')
+            self.castling.replace('q', '')
+
+        if self.board[movement.orow, movement.ocol] == self.WROOK and movement.orow == 0 and movement.ocol == 0:
+            self.castling.replace('Q', '')
+        if self.board[movement.orow, movement.ocol] == self.WROOK and movement.orow == 0 and movement.ocol == 7:
+            self.castling.replace('K', '')
+
+        if self.board[movement.orow, movement.ocol] == self.BROOK and movement.orow == 7 and movement.ocol == 0:
+            self.castling.replace('q', '')
+        if self.board[movement.orow, movement.ocol] == self.BROOK and movement.orow == 7 and movement.ocol == 7:
+            self.castling.replace('k', '')
+
+        # Promotion
         if movement.promotion is None:
             self.board[movement.drow][movement.dcol] = self.board[movement.orow][movement.ocol]
         else:
             self.board[movement.drow][movement.dcol] = movement.promotion
-        self.board[movement.orow][movement.ocol] = 0
+
+        # Empty origin
+        self.board[movement.orow][movement.ocol] = self.EMPTY
