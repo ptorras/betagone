@@ -47,6 +47,9 @@ class Board:
         white kingside castling, k -> black kingside castling)
     turn : str
         Which side's move is it
+    fiftymove : int
+        Half-move counter to assess whether the position has reached the fifty
+        move rule draw
     """
 
     EMPTY = 0  # Empty Square
@@ -686,8 +689,8 @@ class Board:
                     self.board[0, 3] = self.WROOK
                     self.board[0, 0] = self.EMPTY
 
-            self.castling.replace('Q', '')
-            self.castling.replace('K', '')
+            self.castling = self.castling.replace('Q', '')
+            self.castling = self.castling.replace('K', '')
 
         if self.board[movement.orow, movement.ocol] == self.BKING:
             if movement.orow == 7 and movement.ocol == 4:
@@ -701,18 +704,18 @@ class Board:
                     self.board[7, 3] = self.BROOK
                     self.board[7, 0] = self.EMPTY
 
-            self.castling.replace('k', '')
-            self.castling.replace('q', '')
+            self.castling = self.castling.replace('k', '')
+            self.castling = self.castling.replace('q', '')
 
         if self.board[movement.orow, movement.ocol] == self.WROOK and movement.orow == 0 and movement.ocol == 0:
-            self.castling.replace('Q', '')
+            self.castling = self.castling.replace('Q', '')
         if self.board[movement.orow, movement.ocol] == self.WROOK and movement.orow == 0 and movement.ocol == 7:
-            self.castling.replace('K', '')
+            self.castling = self.castling.replace('K', '')
 
         if self.board[movement.orow, movement.ocol] == self.BROOK and movement.orow == 7 and movement.ocol == 0:
-            self.castling.replace('q', '')
+            self.castling = self.castling.replace('q', '')
         if self.board[movement.orow, movement.ocol] == self.BROOK and movement.orow == 7 and movement.ocol == 7:
-            self.castling.replace('k', '')
+            self.castling = self.castling.replace('k', '')
 
         # Promotion
         if movement.promotion is None:

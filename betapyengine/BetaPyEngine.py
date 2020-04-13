@@ -1,11 +1,17 @@
 from Board import *
+import time
 
 test = Board()
 
-test.from_fen('rnbqkbnr/pp1p1ppp/8/2pPp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 3')
+test.from_fen('r3kb1r/pbpB1ppp/1p6/4P3/4P2q/2P5/P1Q2PPP/R1B1K1NR b KQkq - 0 10')
 print(test)
 
-for i in test.gen_allmoves():
+t = time.time()
+moves = test.gen_allmoves()
+print("Movegen time: ", time.time() - t)
+
+
+for i in moves:
     nb = Board(test)
     nb.makemove(i)
 
