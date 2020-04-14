@@ -785,7 +785,8 @@ class Board:
             Whether there's a piece that belongs to the playing side
         """
         is_black = np.bitwise_and(self.board[row, col], self.COLOR_MASK)
-        if (is_black and self.turn == 'b') or (not is_black and self.turn == 'w'):
+        if ((is_black and self.turn == 'b') or (not is_black and self.turn == 'w')) \
+                and self.board[row, col] != self.EMPTY:
             return True
         else:
             return False
