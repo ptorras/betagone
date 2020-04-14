@@ -154,7 +154,7 @@ class Board:
     def __repr__(self):
         return str(self)
 
-    def from_fen(self, fen):
+    def from_fen(self, fen: str):
         """
         Sets the current board to the position represented by a FEN formatted
         string
@@ -224,7 +224,7 @@ class Board:
 
         self.board = np.array(board)
 
-    def __wpawn_moves(self, row, col, possiblesq, enemysq):
+    def __wpawn_moves(self, row: int, col: int, possiblesq: list, enemysq: list):
         """
         White pawn move generator
 
@@ -629,6 +629,48 @@ class Board:
 
         return currentmoves
 
+    def gen_moves_for_square(self, i, j):
+        """
+        Generates all possible moves of the current playing only for the piece
+        placed in row i, column j. This is an addition to make the playing
+        interface simpler.
+
+        Returns
+        -------
+        list: Movement
+            A list of all of the piece's possible moves
+        """
+        currentmoves = []
+        freesq = np.equal(self.board, 0x00)
+        enemsq = self.__enemysquares()
+        if self.board[i][j] != self.EMPTY and not enemsq[i][j]:
+            # Pawns
+            if self.board[i][j] == self.WPAWN:
+                currentmoves += self.__wpawn_moves(i, j, freesq, enemsq)
+            if self.board[i][j] == self.BPAWN:
+                currentmoves += self.__bpawn_moves(i, j, freesq, enemsq)
+
+            # Knights
+            if self.board[i][j] == self.WKNGHT or self.board[i][j] == self.BKNGHT:
+                currentmoves += self.__knight_moves(i, j, freesq, enemsq)
+
+            # Bishops
+            if self.board[i][j] == self.WBSHP or self.board[i][j] == self.BBSHP:
+                currentmoves += self.__bishp_moves(i, j, freesq, enemsq)
+
+            # Rooks
+            if self.board[i][j] == self.WROOK or self.board[i][j] == self.BROOK:
+                currentmoves += self.__rook_moves(i, j, freesq, enemsq)
+
+            # Queen(s)
+            if self.board[i][j] == self.WQUEEN or self.board[i][j] == self.BQUEEN:
+                currentmoves += self.__queen_moves(i, j, freesq, enemsq)
+
+            # King
+            if self.board[i][j] == self.WKING or self.board[i][j] == self.BKING:
+                currentmoves += self.__king_moves(i, j, freesq, enemsq)
+        return currentmoves
+
     def legal_moves(self):
         pass
 
@@ -725,3 +767,25 @@ class Board:
 
         # Empty origin
         self.board[movement.orow][movement.ocol] = self.EMPTY
+
+    def has_a_piece_of_current_color(self, row: int, col: int):
+        """
+        An aid for the interface to better restrict click interactivity.
+        Returns whether a piece of the playing side lies in the chosen square.
+
+        Parameters
+        ----------
+        row: int
+            Row of the desired square
+        col: int
+            Column of the desired square
+        Returns
+        -------
+        bool
+            Whether there's a piece that belongs to the playing side
+        """
+        is_black = np.bitwise_and(self.board[row, col], self.COLOR_MASK)
+        if (is_black and self.turn == 'b') or (not is_black and self.turn == 'w'):
+            return True
+        else:
+            return False
