@@ -37,28 +37,73 @@ void Board::initialize_magicboards()
 
 	// Calcular els sliding attacks per a cada direccio i casella. Es fa amb un algorisme
 	// dumb7fill perque tots dos adjectius apliquen a un servidor
+
+	// No es un algorisme extremadament eficient ni tampoc esta implementat de la millor manera
+	// pero aixo es un offset que s'executa nomes un cop al entrar al programa, pel que no te massa
+	// sentit que sigui focus de massa esforços
+
 	U64 squaremask = 0x0000000000000001;
 
 	for (int position = 0; position < 64; position++)
 	{
 		U64 currentmask = squaremask << position;
-		bool overflow[8] = { true, true, true, true, true, true, true, true };
+
+		// Per a cada direccio es calculen els sliding attacks fins trobar el final del tauler
+		for (int i = 1; i < 8; i++)
+		{
+			U64 auxmask = currentmask << (8 * i);					// Operacio de bit twiddling per trobar la casella que pertoqui
+			if (!(auxmask & m_boardgen_limits[DIR_NORTH])) break;	// Si dona la volta o surt del rang que toca, sortir del loop
+			m_sliding_attacks[DIR_NORTH][position] |= auxmask;		// Fer la operacio or
+		}
 
 		for (int i = 1; i < 8; i++)
 		{
-			for (int ovf = 0; ovf < 8; ovf++)
-				if ((currentmask & m_boardgen_limits[ovf]) == false)
-					overflow[ovf] = false;
+			U64 auxmask = currentmask << i;
+			if (!(auxmask & m_boardgen_limits[DIR_EAST])) break;
+			m_sliding_attacks[DIR_EAST][position] |= auxmask;
+		}
 
-			if (overflow[DIR_NORTH]) m_sliding_attacks[DIR_NORTH][position] |= currentmask << (8 * i);
-			if (overflow[DIR_SOUTH]) m_sliding_attacks[DIR_SOUTH][position] |= currentmask >> (8 * i);
-			if (overflow[DIR_WEST])  m_sliding_attacks[DIR_WEST][position]  |= currentmask >> i;
-			if (overflow[DIR_EAST])  m_sliding_attacks[DIR_EAST][position]  |= currentmask << i;
+		for (int i = 1; i < 8; i++)
+		{
+			U64 auxmask = currentmask >> (8 * i);
+			if (!(auxmask & m_boardgen_limits[DIR_EAST])) break;
+			m_sliding_attacks[DIR_SOUTH][position] |= auxmask;
+		}
 
-			if (overflow[DIR_NORTHEAST]) m_sliding_attacks[DIR_NORTHEAST][position] |= currentmask << (9 * i);
-			if (overflow[DIR_SOUTHEAST]) m_sliding_attacks[DIR_SOUTHEAST][position] |= currentmask >> (7 * i);
-			if (overflow[DIR_NORTHWEST]) m_sliding_attacks[DIR_NORTHWEST][position] |= currentmask << (7 * i);
-			if (overflow[DIR_SOUTHWEST]) m_sliding_attacks[DIR_SOUTHWEST][position] |= currentmask >> (9 * i);
+		for (int i = 1; i < 8; i++)
+		{
+			U64 auxmask = currentmask >> i;
+			if (!(auxmask & m_boardgen_limits[DIR_WEST])) break;
+			m_sliding_attacks[DIR_WEST][position] |= auxmask;
+		}
+
+		for (int i = 1; i < 8; i++)
+		{
+			U64 auxmask = currentmask << (9 * i);
+			if (!(auxmask & m_boardgen_limits[DIR_NORTHEAST])) break;
+			m_sliding_attacks[DIR_NORTHEAST][position] |= auxmask;
+		}
+
+		for (int i = 1; i < 8; i++)
+		{
+			U64 auxmask = currentmask >> (7 * i);
+			if (!(auxmask & m_boardgen_limits[DIR_SOUTHEAST])) break;
+			m_sliding_attacks[DIR_SOUTHEAST][position] |= auxmask;
+		}
+
+		for (int i = 1; i < 8; i++)
+		{
+			U64 auxmask = currentmask << (7 * i);
+			if (!(auxmask & m_boardgen_limits[DIR_NORTHWEST])) break;
+			m_sliding_attacks[DIR_NORTHWEST][position] |= auxmask;
+		}
+
+		for (int i = 1; i < 8; i++)
+		{
+			U64 auxmask = currentmask >> (9 * i);
+			if (!(auxmask & m_boardgen_limits[DIR_SOUTHWEST])) break;
+			m_sliding_attacks[DIR_SOUTHWEST][position] |= auxmask;
+
 		}
 	}
 	m_defined_tables = true;
@@ -159,7 +204,7 @@ void Board::show()
 		std::cout << ' ';
 			mask = mask << 1;
 		}
-		std::cout << std::endl;
+		if (row != 7) std::cout << std::endl;
 	}
 	std::cout << std::endl << "-+---------------";
 	std::cout << std::endl << "#|a b c d e f g h" << std::endl;
