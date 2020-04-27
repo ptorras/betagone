@@ -106,12 +106,16 @@ void Board::initialize_magicboards()
 
 		}
 	}
+
+	// Calcul de les caselles de moviment dels cavalls
+
+
 	m_defined_tables = true;
 }
 
 Board::Board()
 {
-	m_status = WKC | WQC | BKC | BQC;
+	m_status = WKC | WQC | BKC | BQC | TRN_WHT;
 
 	m_wpieces = INIT_WP;
 	m_bpieces = INIT_BP;
@@ -144,7 +148,7 @@ Board::Board(const Board& board)
 
 Board::Board(std::string fen)
 {
-	m_status = WKC & WQC & BKC & BQC;
+	m_status = WKC | WQC | BKC | BQC | TRN_WHT;
 
 	m_wpieces = INIT_WP;
 	m_bpieces = INIT_BP;

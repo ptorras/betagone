@@ -8,11 +8,16 @@ void U64show(U64 bitboard)
 		std::cout << 8 - row << "|" ;
 		for (int col = 0; col < 8; col++)
 		{
-			std::cout << static_cast<char>((0 != (mask & bitboard)) + '0') << ' ';
+			std::cout << static_cast<char>((0 != (mask & bitboard)) * ('0'-'.') + '.') << ' ';
 			mask = mask << 1;
 		}
 		std::cout << std::endl;
 	}
-	std::cout << "-----------------" << std::endl;
+	std::cout << "-+---------------" << std::endl;
 	std::cout << " |a b c d e f g h" << std::endl << std::endl;
+}
+
+int U8toint(U8 value)
+{
+	return 0 | value;
 }

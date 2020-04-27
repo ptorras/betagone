@@ -23,18 +23,31 @@ public:
 	Board& operator=(const Board& board);
 
 	/////////// Setters & Getters ///////////
-	inline U8 getEnpassantSquare() { return (m_status & EPS) >> 4; }
+	inline void setEnpassantSquare(int square) { m_status = m_status & !(EPS); m_status |= ((square << 4) & EPS); }
+	inline U8	getEnpassantSquare()			{ return (m_status & EPS) >> 4; }
 
-
-	// Inicialitza les taules precalculades
-	void initialize_magicboards();
-
-	void show();	// Printar el tauler
+	/////////// Metodes ///////////
+	void initialize_magicboards();	// Inicialitza les taules precalculades
+	void show();					// Printar el tauler
 
 
 public:
 	// UTILITZA LERF MAPPING (Little Endian Row File, o dit altrament, bit menys significatiu
 	// identificat amb index menys significatiu i numerant les caselles per files)
+
+	/*
+   FILA
+	8|
+	7|
+	6|
+	5|          INDEX
+	4|
+	3| ...
+	2| 08 09 10 11 12 13 14 15
+	1| 00 01 02 03 04 05 06 07
+	-+------------------------
+	 |  a  b  c  d  e  f  g  h  COLUMNA
+	*/
 
 	// Constants de treball
 	static const U16 WKC = 0x0001;		// Enroc curt del blanc
@@ -45,7 +58,11 @@ public:
 	static const U16 WC = WKC | WQC;	// Enroc blanc en general
 	static const U16 BC = BKC | BQC;	// Enroc negre en general
 
-	static const U16 EPS = 0x03F0;	// Mascara per extreure la casella al pas
+	static const U16 EPS = 0x03F0;		// Mascara per extreure la casella al pas
+	static const U16 TRN = 0x0C00;		// Mascara per extreure el torn de joc
+
+	static const U16 TRN_WHT = 0x0400;	// Torn del blanc
+	static const U16 TRN_WHT = 0x0800;	// Torn del negre
 
 	// Inicialitzacions
 	static const U64 INIT_WP = 0x000000000000ffff;	// Inicialitzacio de peces blanques

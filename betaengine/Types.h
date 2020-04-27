@@ -8,4 +8,5 @@
 #define U16 uint16_t
 #define U8  uint8_t
 
+int U8toint(U8 value);
 void U64show(U64 bitboard);
