@@ -1,18 +1,11 @@
 #pragma once
 
+#include <iostream>
+
 // Tipus de longitud fixa
-#define U64 unsigned long long
-#define U32 unsigned long int
-#define U16 unsigned short int
-#define U8  unsigned char
+#define U64 uint64_t
+#define U32 uint32_t
+#define U16 uint16_t
+#define U8  uint8_t
 
-//////////////////////////////////////////
-// Constants U8
-constexpr U8 U8_BLACK = 0x10;		// Torn de negres
-constexpr U8 U8_WHITE = 0x20;		// Torn de blanques
-
-constexpr U8 U8_WSCTL = 0x01;		// Enroc curt de blanques
-constexpr U8 U8_BSCTL = 0x02;		// Enroc llarg de blanques
-constexpr U8 U8_BSCTL = 0x05;		// Enroc curt de negres
-constexpr U8 U8_BSCTL = 0x06;		// Enroc llarg de negres
-
+void U64show(U64 bitboard);

@@ -1,1 +1,0 @@
-#include "PyChessObject.h"

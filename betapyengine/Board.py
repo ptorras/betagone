@@ -672,7 +672,7 @@ class Board:
         return currentmoves
 
     def legal_moves(self):
-        pass
+        candidates = self.gen_allmoves()
 
     def threat_mask(self):
         pass
