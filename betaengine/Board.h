@@ -24,7 +24,7 @@ public:
 
 	/////////// Setters & Getters ///////////
 	inline void setEnpassantSquare(int square) { m_status = m_status & !(EPS); m_status |= ((square << 4) & EPS); }
-	inline U8	getEnpassantSquare()			{ return (m_status & EPS) >> 4; }
+	inline U8	getEnpassantSquare()		   { return (m_status & EPS) >> 4; }
 
 	/////////// Metodes ///////////
 	void initialize_magicboards();	// Inicialitza les taules precalculades
@@ -61,8 +61,8 @@ public:
 	static const U16 EPS = 0x03F0;		// Mascara per extreure la casella al pas
 	static const U16 TRN = 0x0C00;		// Mascara per extreure el torn de joc
 
-	static const U16 TRN_WHT = 0x0400;	// Torn del blanc
-	static const U16 TRN_WHT = 0x0800;	// Torn del negre
+	static const U16 TRN_WHT = 0x0400;	// Mascara per veure si es torn del blanc
+	static const U16 TRN_BLK = 0x0800;	// Mascara per veure si es torn del negre
 
 	// Inicialitzacions
 	static const U64 INIT_WP = 0x000000000000ffff;	// Inicialitzacio de peces blanques

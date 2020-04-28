@@ -51,9 +51,9 @@ void Board::initialize_magicboards()
 		// Per a cada direccio es calculen els sliding attacks fins trobar el final del tauler
 		for (int i = 1; i < 8; i++)
 		{
-			U64 auxmask = currentmask << (8 * i);					// Operacio de bit twiddling per trobar la casella que pertoqui
-			if (!(auxmask & m_boardgen_limits[DIR_NORTH])) break;	// Si dona la volta o surt del rang que toca, sortir del loop
-			m_sliding_attacks[DIR_NORTH][position] |= auxmask;		// Fer la operacio or
+			U64 auxmask = currentmask << (8 * i);					// Operacio de bit twiddling per trobar la casella que pertoqui.
+			if (!(auxmask & m_boardgen_limits[DIR_NORTH])) break;	// Si dona la volta o surt del rang que toca, sortir del loop.
+			m_sliding_attacks[DIR_NORTH][position] |= auxmask;		// Fer la operacio or.
 		}
 
 		for (int i = 1; i < 8; i++)
@@ -108,7 +108,65 @@ void Board::initialize_magicboards()
 	}
 
 	// Calcul de les caselles de moviment dels cavalls
+	for (int pos = 0; pos < 64; pos++)
+	{
+		/*
+		DIRECCIONS
+		+---+---+---+---+---+
+		|   | 8 |   | 1 |   |	
+		+---+---+---+---+---+	Es calculen directament aplicant un or
+		| 7 |   |   |   | 2 |   entre la mascara d'atacs i un bitshift
+		+---+---+---+---+---+	de cada direccio.
+		|   |   | C |   |   |	
+		+---+---+---+---+---+	Mateixa idea que dumb7fill en sliding
+		| 6 |   |   |   | 3 |	attacks, pero aplicada al cavall
+		+---+---+---+---+---+
+		|   | 5 |   | 4 |   |
+		+---+---+---+---+---+
+		  ----> shifts a l'esquerra
 
+		*/
+		U64 currentmask = squaremask << pos;
+
+		m_knight_moves[pos] |= (currentmask << 17);
+		m_knight_moves[pos] |= (currentmask << 10);
+		m_knight_moves[pos] |= (currentmask >> 6);
+		m_knight_moves[pos] |= (currentmask >> 15);
+
+		m_knight_moves[pos] |= (currentmask >> 17);
+		m_knight_moves[pos] |= (currentmask >> 10);
+		m_knight_moves[pos] |= (currentmask << 6);
+		m_knight_moves[pos] |= (currentmask << 15);
+	}
+
+	// Calcul de les caselles de moviment del rei
+	for (int pos = 0; pos < 64; pos++)
+	{
+		/*
+		DIRECCIONS
+		+---+---+---+
+		| 8 | 1 | 2 |
+		+---+---+---+
+		| 7 | R | 3 |
+		+---+---+---+
+		| 6 | 5 | 4 |
+		+---+---+---+
+
+		  ----> shifts a l'esquerra
+		*/
+
+		U64 currentmask = squaremask << pos;
+
+		m_king_moves[pos] |= (currentmask << 8);
+		m_king_moves[pos] |= (currentmask << 9);
+		m_king_moves[pos] |= (currentmask << 1);
+		m_king_moves[pos] |= (currentmask >> 7);
+
+		m_king_moves[pos] |= (currentmask >> 8);
+		m_king_moves[pos] |= (currentmask >> 9);
+		m_king_moves[pos] |= (currentmask >> 1);
+		m_king_moves[pos] |= (currentmask << 7);
+	}
 
 	m_defined_tables = true;
 }
