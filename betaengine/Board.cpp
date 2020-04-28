@@ -127,16 +127,17 @@ void Board::initialize_magicboards()
 
 		*/
 		U64 currentmask = squaremask << pos;
+		U64 currentrow = (U64)(0x00000000000000ff) << (8*(pos / 8));
 
-		m_knight_moves[pos] |= (currentmask << 17);
-		m_knight_moves[pos] |= (currentmask << 10);
-		m_knight_moves[pos] |= (currentmask >> 6);
-		m_knight_moves[pos] |= (currentmask >> 15);
+		m_knight_moves[pos] |= (currentmask << 17) & (currentrow << 16) ? (currentmask << 17) : 0;
+		m_knight_moves[pos] |= (currentmask << 10) & (currentrow << 8)  ? (currentmask << 10) : 0;
+		m_knight_moves[pos] |= (currentmask >> 6)  & (currentrow >> 8)  ? (currentmask >> 6)  : 0;
+		m_knight_moves[pos] |= (currentmask >> 15) & (currentrow >> 16) ? (currentmask >> 15) : 0;
 
-		m_knight_moves[pos] |= (currentmask >> 17);
-		m_knight_moves[pos] |= (currentmask >> 10);
-		m_knight_moves[pos] |= (currentmask << 6);
-		m_knight_moves[pos] |= (currentmask << 15);
+		m_knight_moves[pos] |= (currentmask >> 17) & (currentrow >> 16) ? (currentmask >> 17) : 0;
+		m_knight_moves[pos] |= (currentmask >> 10) & (currentrow >> 8)  ? (currentmask >> 10) : 0;
+		m_knight_moves[pos] |= (currentmask << 6)  & (currentrow << 8)  ? (currentmask << 6)  : 0;
+		m_knight_moves[pos] |= (currentmask << 15) & (currentrow << 16) ? (currentmask << 15) : 0;
 	}
 
 	// Calcul de les caselles de moviment del rei
@@ -156,16 +157,17 @@ void Board::initialize_magicboards()
 		*/
 
 		U64 currentmask = squaremask << pos;
+		U64 currentrow = (U64)(0x00000000000000ff) << (8 * (pos / 8));
 
-		m_king_moves[pos] |= (currentmask << 8);
-		m_king_moves[pos] |= (currentmask << 9);
-		m_king_moves[pos] |= (currentmask << 1);
-		m_king_moves[pos] |= (currentmask >> 7);
+		m_king_moves[pos] |= (currentmask << 8) & (currentrow << 8) ? (currentmask << 8) : 0;
+		m_king_moves[pos] |= (currentmask << 9) & (currentrow << 8) ? (currentmask << 9) : 0;
+		m_king_moves[pos] |= (currentmask << 1) &  currentrow		? (currentmask << 1) : 0;
+		m_king_moves[pos] |= (currentmask >> 7) & (currentrow >> 8) ? (currentmask >> 7) : 0;
 
-		m_king_moves[pos] |= (currentmask >> 8);
-		m_king_moves[pos] |= (currentmask >> 9);
-		m_king_moves[pos] |= (currentmask >> 1);
-		m_king_moves[pos] |= (currentmask << 7);
+		m_king_moves[pos] |= (currentmask >> 8) & (currentrow >> 8) ? (currentmask >> 8) : 0;
+		m_king_moves[pos] |= (currentmask >> 9) & (currentrow >> 8) ? (currentmask >> 9) : 0;
+		m_king_moves[pos] |= (currentmask >> 1) &  currentrow		? (currentmask >> 1) : 0;
+		m_king_moves[pos] |= (currentmask << 7) & (currentrow << 8) ? (currentmask << 7) : 0;
 	}
 
 	m_defined_tables = true;
