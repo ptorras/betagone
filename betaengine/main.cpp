@@ -5,13 +5,11 @@ int main()
 	Board test_board;
 	Board newboard;
 
-	test_board.show();
-
 	test_board.setEnpassantSquare(32);
 	test_board.m_wpieces = 0x00000300000000ff;
 	test_board.m_pwn	 = 0x0004030000000000;
 	test_board.m_bpieces = 0xff04000000000000;
-	U64show(test_board.wpawn_moves());
+	test_board.show();
 	std::cout << "Test bitscan_fw: " << bitscan_forward(0x00000300000000ff) << std::endl;
 	std::cout << "Test bitscan_fw: " << bitscan_forward(0x0004030000000000) << std::endl;
 	std::cout << "Test bitscan_rv: " << bitscan_reverse(0x0004030000000000) << std::endl;

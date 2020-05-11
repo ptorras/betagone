@@ -66,7 +66,7 @@ void Board::initialize_magicboards()
 		for (int i = 1; i < 8; i++)
 		{
 			U64 auxmask = currentmask >> (8 * i);
-			if (!(auxmask & m_boardgen_limits[DIR_EAST])) break;
+			if (!(auxmask & m_boardgen_limits[DIR_SOUTH])) break;
 			m_sliding_attacks[DIR_SOUTH][position] |= auxmask;
 		}
 
@@ -302,6 +302,7 @@ U64 Board::wpawn_moves()
 	return moves;
 }
 
+
 std::vector<Move> Board::get_moves()
 {
 	U64 enemy = 0, ally = 0;
@@ -318,14 +319,20 @@ std::vector<Move> Board::get_moves()
 		enemy = m_bpieces;
 		ally  = m_wpieces;
 
-		enemy_attacks |= bpawn_moves();	// TODO: Queda calcular la posicio dels atacs al rei si n'hi ha
+		enemy_attacks |= (enemy & m_pwn & ~0x0101010101010101) >> 9;
+		enemy_attacks |= (enemy & m_pwn & ~0x8080808080808080) >> 7;
+
+		// TODO: Queda calcular la posicio dels atacs al rei si n'hi ha
 	}
 	else
 	{
 		enemy = m_wpieces;
 		ally  = m_bpieces;
 
-		enemy_attacks |= wpawn_moves(); // TODO: Queda calcular la posicio dels atacs al rei si n'hi ha
+		enemy_attacks |= (enemy & m_pwn & ~0x0101010101010101) << 7;
+		enemy_attacks |= (enemy & m_pwn & ~0x8080808080808080) << 9;
+
+		// TODO: Queda calcular la posicio dels atacs al rei si n'hi ha
 	}
 
 	U64 blockers = ally | enemy;
@@ -344,10 +351,10 @@ std::vector<Move> Board::get_moves()
 
 	for (int i = 0; i < 64; i++)
 	{
-		if (enemy & sliding_mask)	// Casella amb peca enemiga
+		if (enemy & sliding_mask & ~m_pwn)	// Casella amb peca enemiga
 		{
 			// Cavall
-			if (enemy & m_knght & sliding_mask)
+			if (enemy & m_knght & sliding_mask & ~m_pwn)
 			{
 				enemy_attacks |= (m_knight_moves[i] & ~enemy);
 				if (enemy_attacks & kingmask)
@@ -363,7 +370,6 @@ std::vector<Move> Board::get_moves()
 				U64 movemask = bishp_moves(blockers, i);
 
 				movemask = movemask & ~(enemy);	// Verificar que el rival no es pot menjar les seves propies peces
-				U64show(movemask);
 
 				if (movemask & kingmask)
 				{
@@ -377,7 +383,7 @@ std::vector<Move> Board::get_moves()
 			}
 
 			// Torre
-			else if (enemy & m_rook)
+			else if (enemy & m_rook & sliding_mask)
 			{
 				U64 movemask = rook_moves(blockers, i);
 
@@ -393,7 +399,9 @@ std::vector<Move> Board::get_moves()
 				}
 				enemy_attacks |= movemask;
 			}
-			else if (enemy & m_queen)
+
+			// Dama
+			else if (enemy & m_queen & sliding_mask)
 			{
 				U64 movemask = bishp_moves(blockers, i);
 				movemask |= rook_moves(blockers, i);
@@ -404,25 +412,45 @@ std::vector<Move> Board::get_moves()
 				{
 					attacking_pieces |= sliding_mask;
 					attacks += 1;
+
+					// TODO: Calcular mascara de bloquejos
+
 				}
+				enemy_attacks |= movemask;
 			}
-			else if (enemy & m_king)
+
+			// Rei
+			else if (enemy & m_king & sliding_mask)
 			{
-				U64 movemask = m_king_moves[i];
+				U64 movemask = m_king_moves[i] & ~enemy;
+				enemy_attacks |= movemask;
 
 				// el rei no hauria de poder fer escac. Nomes necessitem saber la seva area d'influencia
 			}
 		}
 		sliding_mask = sliding_mask << 1;
 	}
+	/*
 	std::cout << "ATTACK MASK: " << std::endl;
 	U64show(enemy_attacks); 
 	std::cout << std::endl << "ATTACKING PIECES: " << std::endl;
 	U64show(attacking_pieces);
+	*/
 
 	// Recolocar el rei a la casella corresponent
 	m_king |= kingmask;
 	ally |= kingmask;
+
+
+	if (attacks > 0)
+	{
+		// Si el rei esta en jaque, prendre les mesures adients
+
+	}
+	else
+	{
+		// Sino es pot moure qualsevol peça sempre que no estigui clavada
+	}
 
 	std::vector<Move> out;
 	return out;
@@ -431,17 +459,14 @@ std::vector<Move> Board::get_moves()
 
 U64 Board::bishp_moves(U64 blockers, int square)
 {
-	U64show(m_bishp & m_bpieces);
-	U64show(blockers);
 	U64 movemask = 0x0000000000000000;
 	for (int dir = 0; dir < 4; dir++)
 	{
 		U64 blockade = m_sliding_attacks[2 * dir + 1][square] & blockers;
-		U64show(blockade);
 		if (blockade)
 		{
 			int block = 0;
-			if (dir != DIR_SOUTHEAST && dir != DIR_SOUTHWEST)
+			if ((dir * 2 + 1) != DIR_SOUTHEAST && (dir * 2 + 1) != DIR_SOUTHWEST)
 			{
 				block = bitscan_forward(blockade);
 			}
@@ -455,7 +480,6 @@ U64 Board::bishp_moves(U64 blockers, int square)
 		{
 			movemask |= m_sliding_attacks[2 * dir + 1][square];
 		}
-		U64show(movemask);
 	}
 	return movemask;
 }
@@ -469,7 +493,7 @@ U64 Board::rook_moves(U64 blockers, int square)
 		if (blockade)
 		{
 			int block = 0;
-			if (dir != DIR_SOUTH && dir != DIR_WEST)
+			if ((dir * 2) != DIR_SOUTH && (dir * 2) != DIR_WEST)
 			{
 				block = bitscan_forward(blockade);
 			}
