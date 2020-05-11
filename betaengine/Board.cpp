@@ -322,7 +322,10 @@ std::vector<Move> Board::get_moves()
 		enemy_attacks |= (enemy & m_pwn & ~0x0101010101010101) >> 9;
 		enemy_attacks |= (enemy & m_pwn & ~0x8080808080808080) >> 7;
 
-		// TODO: Queda calcular la posicio dels atacs al rei si n'hi ha
+		attacking_pieces |= enemy & m_pwn & (m_king & ally << 9);
+		attacking_pieces |= enemy & m_pwn & (m_king & ally << 7);
+
+		if (attacking_pieces) attacks += 1;
 	}
 	else
 	{
@@ -332,7 +335,10 @@ std::vector<Move> Board::get_moves()
 		enemy_attacks |= (enemy & m_pwn & ~0x0101010101010101) << 7;
 		enemy_attacks |= (enemy & m_pwn & ~0x8080808080808080) << 9;
 
-		// TODO: Queda calcular la posicio dels atacs al rei si n'hi ha
+		attacking_pieces |= enemy & m_pwn & (m_king & ally >> 9);
+		attacking_pieces |= enemy & m_pwn & (m_king & ally >> 7);
+
+		if (attacking_pieces) attacks += 1;
 	}
 
 	U64 blockers = ally | enemy;
@@ -441,10 +447,20 @@ std::vector<Move> Board::get_moves()
 	m_king |= kingmask;
 	ally |= kingmask;
 
+	std::vector<Move> moves;
 
 	if (attacks > 0)
 	{
 		// Si el rei esta en jaque, prendre les mesures adients
+		if (attacks > 1)
+		{
+			// Un escac doble nomes es pot evadir movent el rei
+
+		}
+		else
+		{
+
+		}
 
 	}
 	else
@@ -452,8 +468,8 @@ std::vector<Move> Board::get_moves()
 		// Sino es pot moure qualsevol peça sempre que no estigui clavada
 	}
 
-	std::vector<Move> out;
-	return out;
+	
+	return moves;
 }
 
 
