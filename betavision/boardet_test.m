@@ -21,6 +21,8 @@ imshow(im_test, []);
 
 %im_test = double(im_test > graythresh(im_test)*255)*255;
 
+
+
 % Aplicar deteccio de vores
 vores = edge(im_test, 'Canny');
 [H, theta, rho] = hough(vores);     % H -> Matriu Hough
