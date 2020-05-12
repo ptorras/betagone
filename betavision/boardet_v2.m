@@ -2,6 +2,7 @@ clearvars
 clc
 close all
 
+
 taulell = imread("./testpic/taulell.png");
 
 nf3 = imread("./testpic/nf3.png");
@@ -38,7 +39,7 @@ figure, imshow(taulell .* uint8(repmat(green,1,1,3)));
 %figure, imshow(uint8(red-red_dilated),[]);
 %figure, imshow(uint8(green-green_dilated),[]);
 
-res = print_lines(red, green, ze4);
+crop_board(red, green, ze4);
 % res = rgb2gray(res);
 % res = res(:,:) > 70;
 % se = strel('square',10);
@@ -47,37 +48,74 @@ res = print_lines(red, green, ze4);
 % 
 % print_lines2(res, ze4);
 
-function res = print_lines(red, green, ze4)
+function crop_board(red, green, ze4)
 
     linies_red = make_lines(red);
     linies_green = make_lines(green);
     
-    img_black = zeros(size(ze4));
+    % COORDINATES OF BOARD
+    x0g = [linies_green(:).point1];
+    x0g = reshape(x0g,2,numel(x0g)/2)';
+    x0r = [linies_red(:).point1];
+    x0r = reshape(x0r,2,numel(x0r)/2)';
     
-    figure();
-    imshow(img_black);
+    % T = top, B = bottom, R = RIGHT, L = LEFT, C = CORNER
+    [tlc,~] = min(x0r);
+    [brc,~] = max(x0g);
+    trc = [brc(1),tlc(2)];
+    h = [tlc(1),tlc(2);trc(1),trc(2)];
+    d = pdist(h,'euclidean');
+    step = (d/8);
+    
+    %img_black = zeros(size(ze4));
+    
+    
+    %figure(), imshow(ze4);
 
-    hold on;
+    %hold on;
     
-     for i=1:length(linies_red)
-        xy_red = [linies_red(i).point1; linies_red(i).point2];
-        xy_green = [linies_green(i).point1; linies_green(i).point2];
-        plot(xy_red(:,1), xy_red(:,2), 'LineWidth', 10, 'Color', 'yellow');
-        plot(xy_green(:,1), xy_green(:,2), 'LineWidth', 10, 'Color', 'magenta');
-        hold on;
+%      for i=1:length(linies_red)
+%         xy_red = [linies_red(i).point1; linies_red(i).point2];
+%         xy_green = [linies_green(i).point1; linies_green(i).point2];
+%         plot(xy_red(:,1), xy_red(:,2), 'LineWidth', 3, 'Color', 'yellow');
+%         plot(xy_green(:,1), xy_green(:,2), 'LineWidth', 3, 'Color', 'magenta');
+%         hold on;
+%      end
+
+     %F = getframe();
+     %res = F.cdata;
+     
+     % t_img = taulell separat amb imatges.
+     
+     t_img = cell(8,8);
+     
+     for i =0:7
+         
+        y1 = tlc(2) + i*step;
+        y2 = y1 + step;
+        
+        
+        for j =0:7
+            
+            x1 = tlc(1) + j*step;
+            x2 = x1 + step; 
+            
+            casella = imcrop(ze4, [x1 y1 x2-x1 y2-y1]);
+            
+            t_img{i+1,j+1} = imresize(casella, [133, 133]);
+            
+            subplot(8,8,(i*8)+(j+1));
+            im_gray = rgb2gray(t_img{i+1,j+1}); %I'M GRAY
+            level = graythresh(im_gray);
+            BW = imbinarize(im_gray,level); imshow(BW);
+            simpleColorDetection
+            %im_edge = edge(im_gray, 'Canny'); imshow(im_edge);
+            
+        end     
      end
      
-     hold off;
-     h = findobj(gca,'Type','line');
-     x=get(h, 'Xdata');
-     y=get(h, 'Ydata');
-     x = cell2mat(x);
-     y = cell2mat(y);
-     disp(x);
-     disp(y);
-     F = getframe();
-     res = F.cdata;
-
+    figure(), imshow(ze4);
+    
 end
 
 % function print_lines2(im_test, ze4)
