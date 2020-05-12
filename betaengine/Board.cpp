@@ -449,12 +449,12 @@ std::vector<Move> Board::get_moves()
 		if (attacks > 1)
 		{
 			// Un escac doble nomes es pot evadir movent el rei
-			U64 movemask = ~enemy_attacks & m_king_moves[kingpos];
+			U64 movemask = ~enemy_attacks & m_king_moves[kingpos] & ~ally;
 
 			while (movemask)
 			{
 				int destination = bitscan_forward(movemask);
-				movemask &= ~(0x0000000000000001 << destination);
+				movemask &= ~(static_cast<U64>(0x0000000000000001) << destination);
 				Move movement;
 
 				Movevar::setOriginSquare(movement, kingpos);
@@ -517,7 +517,101 @@ std::vector<Move> Board::get_moves()
 		{
 			if (ally & sliding_mask)
 			{
+				// Rei
+				if (m_king & sliding_mask)
+				{
+					U64 movemask = m_king_moves[sq] & ~enemy_attacks & ~ally;
+					mask2move(moves, movemask, sq);
+					// Enrocs pel cas blanc
+					if ((m_status & TRN_WHT))
+					{
+						if ((m_status & WKC) && !((ally | enemy | enemy_attacks) & 0x0000000000000060))
+						{
+							Move move = 0;
+							Movevar::setCastling(move, Movevar::KSCAST, Movevar::WHCAST);
 
+							moves.push_back(move);
+						}
+						if ((m_status & WQC) && !((ally | enemy | enemy_attacks) & 0x000000000000000C))
+						{
+							Move move = 0;
+							Movevar::setCastling(move, Movevar::QSCAST, Movevar::WHCAST);
+
+							moves.push_back(move);
+						}
+					}
+					// Enrocs pel cas negre
+					else
+					{
+						if ((m_status & BKC) && !((ally | enemy | enemy_attacks) & 0x6000000000000000))
+						{
+							Move move = 0;
+							Movevar::setCastling(move, Movevar::KSCAST, Movevar::BKCAST);
+
+							moves.push_back(move);
+						}
+						if ((m_status & BQC) && !((ally | enemy | enemy_attacks) & 0x0C00000000000000))
+						{
+							Move move = 0;
+							Movevar::setCastling(move, Movevar::QSCAST, Movevar::BKCAST);
+
+							moves.push_back(move);
+						}
+					}
+				}
+				// Dama
+				else if (m_queen & sliding_mask)
+				{
+					U64 movemask;
+					if (sliding_mask & pinmap)
+					{
+						movemask = (bishp_moves(ally | enemy, sq) | rook_moves(ally | enemy, sq)) & ~ally & pinray;
+					}
+					else
+					{
+						movemask = (bishp_moves(ally | enemy, sq) | rook_moves(ally | enemy, sq)) & ~ally;
+					}
+					mask2move(moves, movemask, sq);
+				}
+				// Torre
+				else if (m_rook & sliding_mask)
+				{
+					U64 movemask;
+					if (sliding_mask & pinmap)
+					{
+						movemask = rook_moves(ally | enemy, sq) & ~ally & pinray;
+					}
+					else
+					{
+						movemask = rook_moves(ally | enemy, sq) & ~ally;
+					}
+					mask2move(moves, movemask, sq);
+				}
+				// Alfil
+				else if (m_bishp & sliding_mask)
+				{
+					U64 movemask;
+					if (sliding_mask & pinmap)
+					{
+						movemask = bishp_moves(ally | enemy, sq) & ~ally & pinray;
+					}
+					else
+					{
+						movemask = bishp_moves(ally | enemy, sq) & ~ally;
+					}
+					mask2move(moves, movemask, sq);
+				}
+				// Cavall
+				else if (m_knght & sliding_mask)
+				{
+					U64 movemask = m_knight_moves[sq] & ~ally;
+					mask2move(moves, movemask, sq);
+				}
+				// Peons
+				else if (m_pwn & sliding_mask)
+				{
+
+				}
 			}
 			sliding_mask = sliding_mask << 1;
 		}
@@ -580,4 +674,40 @@ U64 Board::rook_moves(U64 blockers, int square)
 		}
 	}
 	return movemask;
+}
+
+void Board::mask2move(std::vector<Move>& moves, U64 movemask, int sq)
+{
+	while (movemask)
+	{
+		int position = bitscan_forward(movemask);
+		movemask &= ~(static_cast<U64>(0x0000000000000001) << position);
+
+		Move move = 0;
+		Movevar::setDestinationSquare(move, position);
+		Movevar::setOriginSquare(move, sq);
+
+		moves.push_back(move);
+	}
+}
+
+void Board::perform(Move move)
+{
+	unsigned int origin = Movevar::getOriginSquare(move);
+	unsigned int destin = Movevar::getDestinationSquare(move);
+
+	U64 omask = static_cast<U64>(0x0000000000000001) << origin;
+	U64 dmask = static_cast<U64>(0x0000000000000001) << destin;
+
+	U64& ally  = m_status & TRN_WHT ? m_wpieces : m_bpieces;
+	U64& enemy = m_status & TRN_WHT ? m_bpieces : m_wpieces;
+
+	U64& piece = m_king;
+
+	if		(omask & m_king)	piece = m_king;
+	else if (omask & m_queen)	piece = m_queen;
+	else if (omask & m_bishp)	piece = m_bishp;
+	else if (omask & m_knght)	piece = m_knght;
+	else if (omask & m_rook)	piece = m_rook;
+	else if (omask & m_pwn)		piece = m_pwn;
 }

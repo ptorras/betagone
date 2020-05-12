@@ -6,6 +6,15 @@
 #include "Types.h"
 
 
+// Move
+// +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+// |15 |14 |13 |12 |11 |10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+// +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+// | Prom. | Enroc |   Casella destinacio  |   Casella d'origen    |
+// +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+// | COMB  | Q | K |         Numero		   |        Numero		   |
+// +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
 typedef U16 Move;
 namespace Movevar {
 	const U16 OGSQ = 0x003F;	// Origin square (bits 0-5)
@@ -24,11 +33,12 @@ namespace Movevar {
 	const U16 BSHPPROM  = 0x8000;	// Promocio a alfil			peça en questio
 	const U16 KNGHTPROM	= 0xC000;	// Promocio a cavall
 
-	inline int  getOriginSquare(Move move)		{ return (int)(move & OGSQ); }
-	inline int  getDestinationSquare(Move move)	{ return (int)((move & DTSQ) >> 6); }
+	inline unsigned int  getOriginSquare(Move move)		{ return (unsigned int)(move & OGSQ); }
+	inline unsigned int  getDestinationSquare(Move move)	{ return (unsigned int)((move & DTSQ) >> 6); }
 
-	inline void setOriginSquare(Move& move, int origin) { move |= (origin & OGSQ); }
-	inline void setDestinationSquare(Move& move, int destination) { move |= ((destination << 6) & DTSQ); }
+ 	inline void setOriginSquare(Move& move, unsigned int origin) { move |= (origin & OGSQ); }
+	inline void setDestinationSquare(Move& move, unsigned int destination) { move |= ((destination << 6) & DTSQ); }
+
 	inline void setCastling(Move& castling, U16 castling_type, U16 color) { castling |= castling_type; castling |= color; }
 }
 
@@ -62,6 +72,9 @@ public:
 
 	U64 bishp_moves(U64 blockers, int square);	// Moviments d'Alfil
 	U64 rook_moves(U64 blockers, int square);	// Moviments de Torre
+
+	void mask2move(std::vector<Move>& moves, U64 movemask, int sq);
+	void perform(Move move);
 
 	std::vector<Move> get_moves();	// Generacio de moviments del torn actual
 

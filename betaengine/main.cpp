@@ -18,7 +18,14 @@ int main()
 	std::cout << std::endl << std::endl;
 	std::vector<Move> testmove = test_board.get_moves();
 
+	for (Move i : testmove)
+	{
+		std::cout << Movevar::getOriginSquare(i) << " - " << Movevar::getDestinationSquare(i) << std::endl;;
+	}
+
 	test_board.show();
+
+	test_board.perform(testmove[0]);
 
 	return 0;
 }
