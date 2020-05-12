@@ -436,12 +436,6 @@ std::vector<Move> Board::get_moves()
 		}
 		sliding_mask = sliding_mask << 1;
 	}
-	/*
-	std::cout << "ATTACK MASK: " << std::endl;
-	U64show(enemy_attacks); 
-	std::cout << std::endl << "ATTACKING PIECES: " << std::endl;
-	U64show(attacking_pieces);
-	*/
 
 	// Recolocar el rei a la casella corresponent
 	m_king |= kingmask;
@@ -451,14 +445,26 @@ std::vector<Move> Board::get_moves()
 
 	if (attacks > 0)
 	{
-		// Si el rei esta en jaque, prendre les mesures adients
+		// Si el rei esta en escac, prendre les mesures adients
 		if (attacks > 1)
 		{
 			// Un escac doble nomes es pot evadir movent el rei
+			U64 movemask = ~enemy_attacks & m_king_moves[kingpos];
 
+			while (movemask)
+			{
+				int destination = bitscan_forward(movemask);
+				movemask &= ~(0x0000000000000001 << destination);
+				Move movement;
+
+				Movevar::setOriginSquare(movement, kingpos);
+				Movevar::setDestinationSquare(movement, destination);
+				moves.push_back(movement);
+			}
 		}
 		else
 		{
+			// Jugar qualsevol peça bloquejant els atacs o movent el rei
 
 		}
 
@@ -466,6 +472,55 @@ std::vector<Move> Board::get_moves()
 	else
 	{
 		// Sino es pot moure qualsevol peça sempre que no estigui clavada
+		U64 pinmap = 0x0000000000000000;
+		U64 pinray = 0x0000000000000000;
+
+		for (int dir = 0; dir < 8; dir++)
+		{
+			U64 mask = 0;
+			if (dir % 2)
+			{
+				// Moviment diagonal
+				U64 attackers = m_sliding_attacks[dir][kingpos] & (m_bishp | m_queen) & enemy;
+
+				if (attackers)
+				{
+					int position = 0;
+					if (dir < 4)	position = bitscan_forward(attackers);
+					else			position = bitscan_reverse(attackers);
+
+					pinmap |= (bishp_moves(enemy & ally, kingpos) & ally) & (bishp_moves(ally, position) & ally);
+					pinray |= m_sliding_attacks[dir][kingpos];
+				}			
+			}
+			else
+			{
+				// Moviment de torre
+				U64 attackers = m_sliding_attacks[dir][kingpos] & (m_bishp | m_queen) & enemy;
+
+				if (attackers)
+				{
+					int position = 0;
+					if (dir < 4)	position = bitscan_forward(attackers);
+					else			position = bitscan_reverse(attackers);
+
+					pinmap |= (rook_moves(enemy & ally, kingpos) & ally) & (rook_moves(ally, position) & ally);
+					pinray |= m_sliding_attacks[dir][kingpos];
+				}
+			}
+		}
+
+		// Moviments de les peces
+		U64 sliding_mask = 0x0000000000000001;
+
+		for (int sq = 0; sq < 64; sq++)
+		{
+			if (ally & sliding_mask)
+			{
+
+			}
+			sliding_mask = sliding_mask << 1;
+		}
 	}
 
 	
