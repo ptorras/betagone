@@ -393,7 +393,7 @@ class Board:
                     if freesq[row+i, col+i] or enemsq[row+i, col+i]:
                         moves.append(Movement(row, col, row+i, col+i))
                         if enemsq[row+i, col+i]:
-                            sw = False
+                            nw = False
                     else:
                         nw = False
                 else:
@@ -403,7 +403,7 @@ class Board:
                     if freesq[row+i, col-i] or enemsq[row+i, col-i]:
                         moves.append(Movement(row, col, row+i, col-i))
                         if enemsq[row+i, col-i]:
-                            sw = False
+                            ne = False
                     else:
                         ne = False
                 else:
@@ -424,7 +424,7 @@ class Board:
                     if freesq[row-i, col-i] or enemsq[row-i, col-i]:
                         moves.append(Movement(row, col, row-i, col-i))
                         if enemsq[row-i, col-i]:
-                            sw = False
+                            se = False
                     else:
                         se = False
                 else:
@@ -671,8 +671,42 @@ class Board:
                 currentmoves += self.__king_moves(i, j, freesq, enemsq)
         return currentmoves
 
+    def gen_legal_moves_square(self, i, j):
+        """
+        Generates all legal moves of the current playing only for the piece
+        placed in row i, column j. This is an addition to make the playing
+        interface simpler.
+        """
+        candidates = self.gen_moves_for_square(i, j)
+        legals = []
+
+        for move in candidates:
+            newboard = Board(self)
+            newboard.makemove(move)
+
+            if newboard.legal(move):
+                legals.append(move)
+        return legals
+
     def legal_moves(self):
+        """
+        Generates all legal moves
+
+        Returns
+        -------
+        list : Movement
+            A list of all legal moves in the position
+        """
         candidates = self.gen_allmoves()
+        legals = []
+
+        for move in candidates:
+            newboard = Board(self)
+            newboard.makemove(move)
+
+            if newboard.legal(move):
+                legals.append(move)
+        return legals
 
     def threat_mask(self):
         pass
@@ -790,3 +824,59 @@ class Board:
             return True
         else:
             return False
+
+    def legal(self, lastmove = None):
+        """
+        Check whether the current position is legal
+
+        Parameters
+        ----------
+        lastmove : Movement
+            The last movement made on the board. This is used for complex
+            moves like castling, where knowledge of prior threats is needed
+        Returns
+        -------
+        Bool
+            Legality of current board
+        """
+        legality = True
+        castling = None
+        if lastmove is not None:
+            if self.turn == 'b':
+                if lastmove.ocol == 4 and lastmove.dcol == 6 and self.board[0, 6] == self.WKING:
+                    castling = "k"
+                elif lastmove.ocol == 4 and lastmove.dcol == 2 and self.board[0, 2] == self.WKING:
+                    castling = "q"
+            else:
+                if lastmove.ocol == 4 and lastmove.dcol == 6 and self.board[7, 6] == self.BKING:
+                    castling = "k"
+                elif lastmove.dcol == 4 and lastmove.dcol == 2 and self.board[7, 2] == self.BKING:
+                    castling = "q"
+
+        if self.turn == 'b':
+            position = np.argwhere(self.board == self.WKING)[0]
+        else:
+            position = np.argwhere(self.board == self.BKING)[0]
+        possible_moves = self.gen_allmoves()
+        for move in possible_moves:
+            if move.drow == position[0] and move.dcol == position[1]:
+                legality = False
+                break
+            if castling is not None:
+                if castling == "k" and self.turn == 'b' and ((move.drow == 0 and move.dcol == 5) or
+                                                             (move.drow == 0 and move.dcol == 4)):
+                    legality = False
+                    break
+                if castling == "q" and self.turn == 'b' and ((move.drow == 0 and move.dcol == 3) or
+                                                             (move.drow == 0 and move.dcol == 4)):
+                    legality = False
+                    break
+                if castling == "k" and self.turn == 'w' and ((move.drow == 7 and move.dcol == 5) or
+                                                             (move.drow == 7 and move.dcol == 4)):
+                    legality = False
+                    break
+                if castling == "q" and self.turn == 'w' and ((move.drow == 7 and move.dcol == 3) or
+                                                             (move.drow == 7 and move.dcol == 4)):
+                    legality = False
+                    break
+        return legality

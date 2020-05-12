@@ -219,7 +219,7 @@ class PlayInterface:
             else:
                 if self.board_data.has_a_piece_of_current_color(square_row, square_col):
                     self.selected_square = [square_row, square_col]
-                    self.possible_moves = self.board_data.gen_moves_for_square(square_row, square_col)
+                    self.possible_moves = self.board_data.gen_legal_moves_square(square_row, square_col)
         else:
             self.selected_square = None
             self.possible_moves = None
