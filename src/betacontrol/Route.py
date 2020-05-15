@@ -52,4 +52,19 @@ class Route:
         self.capture_map = np.logical_not(self.capture_map)
 
     def calculate(self, move:str):
+        """
+        Utilitza una representacio watershed per trobar el cami mes rapid per
+        arribar a la casella de destinacio. Te en compte la natura del moviment
+        i es genera unicament amb connectivitat a 4.
+
+        Parameters
+        ----------
+        move: str
+            String que representa el moviment de manera compacta i independent
+            d'estat del tauler (per minimitzar el solapament entre moduls)
+
+        Returns
+        -------
+
+        """
         pass

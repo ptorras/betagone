@@ -7,7 +7,7 @@ from betacontrol.Route import Route
 def main():
 
     # Carregar els fitxer de test corresponent
-    test = "00003"
+    test = "00006"
 
     board_image_prior = plt.imread("./betatest/tests/" + test + "_prior.png")
     board_image_post = plt.imread("./betatest/tests/" + test + "_post.png")
@@ -44,6 +44,7 @@ def main():
 
     # Calcular la millor jugada
     move = engine.process_position(board_fen_post)
+    strmove = engine.translate_move(move)
     print(move)
     engine.shutdown()
 
