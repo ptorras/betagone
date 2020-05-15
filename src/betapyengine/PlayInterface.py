@@ -37,7 +37,7 @@ class PlayInterface:
         self.outlncolor1 = 'yellow2'
         self.outlncolor2 = 'yellow3'
 
-        self.pieceset = Image.open("./assets/chess_set.png")
+        self.pieceset = Image.open("assets/chess_set.png")
         self.bpadding = 20
         self.boardsize = 460
         self.sqsize = 20

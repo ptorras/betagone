@@ -2,9 +2,19 @@ import chess
 import random
 import math
 
+VALUE = {
+    chess.KING: 0,
+    chess.QUEEN: 10,
+    chess.ROOK: 5,
+    chess.KNIGHT: 5,
+    chess.BISHOP: 3,
+    chess.PAWN: 1,
+    None: 0
+}
+
 class MCTSNode:
     MAX_DEPTH = 100
-    PRUNING_DEPTH = 4
+    PRUNING_DEPTH = 8
 
     def __init__(self, move: chess.Move, parent, depth: int = 0):
         self.move = move
@@ -68,13 +78,13 @@ class MCTSRoot:
         if self.board.is_game_over():
             base.propagate_result(1 if self.board.result() == "1-0" else 0.5 if self.board.result() == "1/2-1/2" else 0)
         else:
-            base.propagate_result(random.randint(0,1))
+            base.propagate_result(give_score(self.board))
 
     def getmove(self):
         self.build_firstlevel()
         print("Playouts: [", end="")
         for i in range(self.max_playouts):
-            randompick = int(abs(random.gauss(0, len(self.children) / 4)))
+            randompick = int(abs(random.gauss(0, len(self.children) / 6)))
             randompick = randompick if randompick < len(self.children) else len(self.children) - 1
             self.playout(self.children[randompick])
             self.board = chess.Board(self.fen)
@@ -83,38 +93,43 @@ class MCTSRoot:
                 print("#", end="")
 
         if self.board.turn == chess.WHITE:
+            self.children = [child for child in self.children if child.playouts > 1/20 * self.max_playouts]
             chosen_node = self.children[self.children.index(max(self.children, key=get_score))]
         else:
             chosen_node = self.children[self.children.index(min(self.children, key=get_score))]
-        print(chosen_node)
+        print("]\n", chosen_node)
         return chosen_node.move, get_score(chosen_node)
 
 
 def get_score(node: MCTSNode):
-    return math.sqrt(node.playouts) * ((node.score / node.playouts) - 0.5) if node.playouts > 0 else 0
+    return math.log2(node.playouts) * ((node.score / node.playouts) - 0.5) if node.playouts > 0 else 0
 
 
 def evaluate(board:chess.Board):
 
-    VALUE = {
-        chess.KING: 0,
-        chess.QUEEN: 10,
-        chess.ROOK: 5,
-        chess.KNIGHT: 5,
-        chess.BISHOP: 3,
-        chess.PAWN: 1,
-        None: 0
+    ENEMY = {
+        chess.WHITE: chess.BLACK,
+        chess.BLACK: chess.WHITE
     }
 
-    enemy = chess.WHITE if board.turn == chess.WHITE else chess.BLACK
     score = 0
-    if board.is_check():
-        score += 50
 
-    if board.halfmove_clock == 0:
+    if board.result() == "1-0" or board.result() == "0-1":
+        score += 9999
+
+    if board.is_check():
         score += 10
 
     for sq in chess.SQUARES:
-        score += len(board.attackers(enemy, sq)) * VALUE[board.piece_type_at(sq)]
+        score += len(board.attackers(board.turn, sq)) * VALUE[board.piece_type_at(sq)]
+        score -= len(board.attackers(ENEMY[board.turn], sq)) * VALUE[board.piece_type_at(sq)]
 
     return score
+
+
+def give_score(board:chess.Board):
+    value = 0
+    for piece in chess.PIECE_TYPES:
+        value += len(board.pieces(piece, chess.WHITE)) * VALUE[piece]
+        value -= len(board.pieces(piece, chess.BLACK)) * VALUE[piece]
+    return 0 if value < 0 else 0.5 if value == 0 else 1

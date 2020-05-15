@@ -354,3 +354,4 @@ MigrationBackup/
 
 # Carpeta configuracio pycharm
 .idea
+/src/stockfish_hook/stockfish-11-win/
