@@ -29,11 +29,13 @@ class Wrapper:
 
         Parameters
         ----------
-        move
+        move: chess.Move
+            Jugada proveida pel motor de joc
 
         Returns
         -------
-
+        str
+            Descripcio del tauler
         """
         string_move = str(move)
         ret_move = ""
@@ -45,7 +47,7 @@ class Wrapper:
             piece = chess.piece_symbol(self.board.piece_type_at(chess.square(int(ret_move[2]), int(ret_move[3]))))
             ret_move += piece.upper() if self.board.turn == chess.BLACK else piece.lower()
             if self.board.is_en_passant(move):
-                ret_move += ""
+                ret_move += "e"
                 if self.board.turn == chess.WHITE:
                     ret_move += ret_move[2] + str(int(ret_move[3]) - 1)
                 else:
