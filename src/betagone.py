@@ -1,4 +1,4 @@
-from stockfish_hook import Wrapper
+from stockfish_hook.Wrapper import Wrapper
 from betavision import *
 import matplotlib.pyplot as plt
 
@@ -6,7 +6,7 @@ def main():
     # Generar l'objecte de visio
 
     # Generar el motor de joc
-    engine = Wrapper("./stockfish_hook/stockfish-11-win/stockfish_20011801_x64.exe", 1)
+    engine = Wrapper("./stockfish_hook/stockfish-11-win/Windows/stockfish_20011801_x64.exe", 1)
 
     # Generar l'objecte de control
 
@@ -22,12 +22,24 @@ def main():
     with open("./betatest/tests/" + test + "_post.fen") as file_fen:
         board_fen_post = file_fen.read()
 
+    plt.figure()
+    plt.imshow(board_image_prior)
+    plt.show()
+
+    plt.figure()
+    plt.imshow(board_image_post)
+    plt.show()
+
     # Detectar la posicio del tauler
 
     # Verificar que les posicions son compatibles
 
-    #
+    # Calcular la millor jugada
+
+    # Calcular la ruta a seguir
+
+    # Fer la ruta
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()
