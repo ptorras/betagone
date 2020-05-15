@@ -1,14 +1,10 @@
 from stockfish_hook.Wrapper import Wrapper
 from betavision import *
 import matplotlib.pyplot as plt
+from betacontrol.Route import Route
+
 
 def main():
-    # Generar l'objecte de visio
-
-    # Generar el motor de joc
-    engine = Wrapper("./stockfish_hook/stockfish-11-win/Windows/stockfish_20011801_x64.exe", 1)
-
-    # Generar l'objecte de control
 
     # Carregar els fitxer de test corresponent
     test = "00003"
@@ -30,11 +26,26 @@ def main():
     plt.imshow(board_image_post)
     plt.show()
 
+    # Generar l'objecte de visio
+
+
+    # Generar el motor de joc
+    engine = Wrapper("./stockfish_hook/stockfish-11-win/Windows/stockfish_20011801_x64.exe", 1)
+
+    # Generar l'objecte de control
+    route_maker = Route(board_fen_post)
+
     # Detectar la posicio del tauler
+
+
 
     # Verificar que les posicions son compatibles
 
+
     # Calcular la millor jugada
+    move = engine.process_position(board_fen_post)
+    print(move)
+    engine.shutdown()
 
     # Calcular la ruta a seguir
 
