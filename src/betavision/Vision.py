@@ -46,7 +46,9 @@ class PieceDetector:
 
         return [A, B], step
 
-    def __cut_boxes(self, img):
+    def cut_boxes(self, img):
+
+        boxes = list()
 
         tlc = self._points[0]
         c = 0   # correcció per si les imatges queden mal retallades
@@ -62,15 +64,16 @@ class PieceDetector:
 
                 casella = img[y1:y2, x1:x2]
                 casella = cv2.resize(casella, dim)
+                boxes.append(casella)
+                # cv2.imshow('casella', casella)
+                # cv2.waitKey()
 
-                cv2.imshow('casella', casella)
-                cv2.waitKey()
+        # cv2.destroyAllWindows()
 
-        cv2.destroyAllWindows()
-
+        return np.asarray(boxes)
 
     def detect_pieces(self, actual_board:np.ndarray) -> str:
-        self.__cut_boxes(actual_board)
+        boxes = self.cut_boxes(actual_board)
 
 
 #---- PROVES ---- ELIMINAR QUAN LA CLASSE ESTIGUI ACABADA.
