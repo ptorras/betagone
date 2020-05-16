@@ -61,7 +61,7 @@ def generateDataset():
             cutndsave(im, num, piece, 'w',path2saveim)
             num += 64
 
-    cutndsave(board, 0, 'b', None,'./dataset/board')
+    cutndsave(board, 0, 'b', None,'../datasets/pieces/board')
 
 #TODO: add arguments ?????? idk
 
