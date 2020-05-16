@@ -4,12 +4,11 @@ import glob
 import os, shutil
 import time
 
-black_pieces = 'bknpqr'
-white_pieces = 'BKNPQR'
+pieces = 'bknpqr'
 
-board = cv2.imread('../betatest/tests/empty.png')
-path_dataset = './dataset/'
-path_images = '../betatest/tests/'
+board = cv2.imread('../datasets/pieces-full/empty.png')
+path_dataset = '../datasets/pieces/'
+path_images = '../datasets/pieces-full/'
 
 wipe=True
 
@@ -29,29 +28,42 @@ def wipeAllData():
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
 
-def cutndsave(img,num,piece,path):
+def cutndsave(img, num, piece, color, path):
+
+    if color=='w':
+        pi = str.upper(piece)
+    elif color == 'b':
+        pi = piece
+    else:
+        pi = piece
+        color = ''
+
     boxes = p.cut_boxes(img)
+
     for i, box in enumerate(boxes):
-        imname = path+'/'+piece+str(num+i)+'.png'
+        imname = path+'/'+pi+color+'_'+str('{0:04}'.format(num+i))+'.png'
         cv2.imwrite(imname,box)
 
 def generateDataset():
-    for black_piece, white_piece in zip(black_pieces,white_pieces):
+    for piece in pieces:
         num = 0
-        path2saveim = path_dataset+black_piece
-        file_path_white = path_images+white_piece+'*.png'
-        file_path_black = path_images+black_piece+'*.png'
+        path2saveim = path_dataset+piece
+        file_path_white = str.lower(path_images+piece+'w*.png')
+        file_path_black = str.lower(path_images+piece+'b*.png')
 
         for file in glob.glob(file_path_black):
             im = cv2.imread(file)
-            cutndsave(im, num, black_piece, path2saveim)
+            cutndsave(im, num, piece, 'b',path2saveim)
             num += 64
 
         for file in glob.glob(file_path_white):
             im = cv2.imread(file)
-            cutndsave(im, num, white_piece, path2saveim)
+            cutndsave(im, num, piece, 'w',path2saveim)
             num += 64
-    cutndsave(board, 0, 'b', './dataset/board')
+
+    cutndsave(board, 0, 'b', None,'./dataset/board')
+
+#TODO: add arguments ?????? idk
 
 def main():
 
