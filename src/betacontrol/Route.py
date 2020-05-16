@@ -67,4 +67,7 @@ class Route:
         -------
 
         """
-        pass
+        captura = True if "x" in move else False
+        alpas = True if "e" in move else False
+        coronacio = True if "=" in move else False
+
