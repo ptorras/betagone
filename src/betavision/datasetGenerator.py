@@ -6,9 +6,9 @@ import time
 
 pieces = 'bknpqr'
 
-board = cv2.imread('../datasets/pieces-full/empty.png')
-path_dataset = '../datasets/pieces/'
-path_images = '../datasets/pieces-full/'
+board = cv2.imread('../../datasets/pieces-full/empty.png')
+path_dataset = '../../datasets/pieces/'
+path_images = '../../datasets/pieces-full/'
 
 wipe=True
 
@@ -61,7 +61,7 @@ def generateDataset():
             cutndsave(im, num, piece, 'w',path2saveim)
             num += 64
 
-    cutndsave(board, 0, 'b', None,'../datasets/pieces/board')
+    cutndsave(board, 0, 'b', None,'../../datasets/pieces/board')
 
 #TODO: add arguments ?????? idk
 
@@ -74,7 +74,7 @@ def main():
     generateDataset()
     end = time.time()
 
-    print('Time elapsed:',str(round((end-start),2))+'s')
+    print('Elapsed time:',str(round((end-start),2))+'s')
 
 if __name__ == '__main__':
     main()
