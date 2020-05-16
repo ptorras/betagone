@@ -20,16 +20,18 @@ ze4 = imread("./testpic/ze4.png");
 red = taulell(:,:,1);
 green = taulell(:,:,2);
 
-
+figure(), imshow(red);
+val = graythresh(green)*255;
+disp(val);
 red = red >= graythresh(red)*255;
+figure(), imshow(red);
 green = green >= graythresh(green)*255;
 
 kernel = strel("square", 100);
 
-
 red = not(imclose(not(red), kernel));
 green = not(imclose(not(green), kernel));
-
+figure(), imshow(red);
 % figure, imshow(red,[]);
 % figure, imshow(green,[]);
 figure, imshow(taulell .* uint8(repmat(red,1,1,3)));
