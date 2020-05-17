@@ -15,7 +15,7 @@ class Route:
     MANHATTAN_DIRECTIONS = [DIR_NORTH, DIR_EAST, DIR_SOUTH, DIR_WEST]
     FULL_DIRECTIONS = [DIR_NORTH, DIR_NE, DIR_EAST, DIR_SE, DIR_SOUTH, DIR_SW, DIR_WEST, DIR_NW]
 
-    DIRECTIONS = MANHATTAN_DIRECTIONS
+    DIRECTIONS = FULL_DIRECTIONS
 
     PIECE_POSITIONS = {
         "p": [(2, x) for x in range(8)],
@@ -198,7 +198,7 @@ class Route:
         return occuppied
 
     def draw_route(self, route: list, board_image: np.ndarray):
-        plt.figure()
+        plt.figure(figsize=(12, 8))
         plt.imshow(board_image)
         current_position = np.copy(self.ORIGEN_IMATGE)
         for num, i in enumerate(route):
