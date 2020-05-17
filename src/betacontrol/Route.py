@@ -29,7 +29,7 @@ class Route:
         "K": [(1, 4)],
     }
 
-    def __init__(self, status:str):
+    def __init__(self, status: str):
         """
         Inicialitza l'estat de l'objecte per a considerar les peces que s'han
         tret del tauler
@@ -51,7 +51,7 @@ class Route:
                         break
         self.capture_map = np.logical_not(self.capture_map)
 
-    def calculate(self, move:str):
+    def route_calculate(self, move: str):
         """
         Utilitza una representacio watershed per trobar el cami mes rapid per
         arribar a la casella de destinacio. Te en compte la natura del moviment
@@ -70,4 +70,10 @@ class Route:
         captura = True if "x" in move else False
         alpas = True if "e" in move else False
         coronacio = True if "=" in move else False
+        enroc = True if "*" in move else False
 
+    def route_segment(self, origin: np.ndarray, destination: np.ndarray):
+        pass
+
+    def draw_route(self, route: list, board_image: np.ndarray):
+        pass

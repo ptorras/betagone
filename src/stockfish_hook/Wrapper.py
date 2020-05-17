@@ -26,6 +26,7 @@ class Wrapper:
         Els opcionals <opt> poden ser:
             -> Captura: x <simbol_peça> (e <columna_alpas> <fila_alpas>)
             -> Promocio: = <simbol_peça>
+            -> Enroc: *
 
         Parameters
         ----------
@@ -52,6 +53,9 @@ class Wrapper:
                     ret_move += ret_move[2] + str(int(ret_move[3]) - 1)
                 else:
                     ret_move += ret_move[2] + str(int(ret_move[3]) + 1)
+
+        if self.board.is_castling(move):
+            ret_move += "*"
         if len(string_move) == 5:
             ret_move += "=" + string_move[-1].upper() if self.board.turn == chess.BLACK else string_move[-1].lower()
         ret_move += "]"
