@@ -90,7 +90,7 @@ class Route:
         abs_dest = np.array([(7-int(move[3]))*2, (int(move[2]))*2])
 
         if enroc:
-
+            pass
         else:
             if captura and not alpas:
                 piece = move[move.find('x')+1]
