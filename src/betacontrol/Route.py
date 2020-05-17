@@ -15,7 +15,7 @@ class Route:
     MANHATTAN_DIRECTIONS = [DIR_NORTH, DIR_EAST, DIR_SOUTH, DIR_WEST]
     FULL_DIRECTIONS = [DIR_NORTH, DIR_NE, DIR_EAST, DIR_SE, DIR_SOUTH, DIR_SW, DIR_WEST, DIR_NW]
 
-    DIRECTIONS = FULL_DIRECTIONS
+    DIRECTIONS = MANHATTAN_DIRECTIONS
 
     PIECE_POSITIONS = {
         "p": [(2, x) for x in range(8)],
@@ -80,8 +80,10 @@ class Route:
     def route_calculate(self, move: str):
         """
         Utilitza una representacio wavefront per trobar el cami mes rapid per
-        arribar a la casella de destinacio. Te en compte la natura del moviment
-        i es genera unicament amb connectivitat a 4.
+        arribar a la casella de destinacio. Te en compte la natura del moviment.
+        Les dades de retorns fan servir increments enters per representar les
+        direccions del moviment, s'han d'escalar posteriorment a increments de
+        motor o a increments d'imatge respectivament
 
         Parameters
         ----------
@@ -91,7 +93,8 @@ class Route:
 
         Returns
         -------
-
+        list: np.ndarray
+            Llista d'increments en les coordenades per dur a terme la ruta
         """
         full_route = []
         captura = True if "x" in move else False
@@ -142,6 +145,31 @@ class Route:
         return full_route
 
     def route_matrix(self, origin: np.ndarray, destination: np.ndarray, magnet: bool = False):
+        """
+        Algorisme de Wavefront (Dijkstra) per trobar la ruta amb menys passos
+        (la qual cosa implica que nomes es optim en distancia euclidiana si
+        s'utilitza amb direccions de manhattan)
+
+        Considera les caselles ocupades per les peces mortes i traça rutes
+        evitant col·lisions. Es pot millorar perque pugui considerar les
+        peces del tauler també.
+
+        Parameters
+        ----------
+        origin: np.ndarray
+            Vector amb l'origen amb la convenció de la matriu (veure imatge
+            a la carpeta datasets)
+        destination: np.ndarray
+            Vector amb l'origen amb la convenció de la matriu
+        magnet: bool
+            Si està a true evadeix les peces del tauler. Sino no cal
+
+        Returns
+        -------
+        np.ndarray
+            Matriu de Wavefront fins el punt d'arribada (no es completa al
+            100% per estalviar en recursos)
+        """
         wavefront_matrix = np.zeros(self.WAVEFRONT_SIZE, dtype=np.int)
 
         if magnet:
@@ -175,6 +203,25 @@ class Route:
         return None
 
     def route_segment(self, origin: np.ndarray, destination: np.ndarray, magnet: bool):
+        """
+        Troba un segment de ruta entre un origen i una destinació (coordenades
+        en format Convenció Matriu, veure imatge a Datasets)
+
+        Parameters
+        ----------
+        origin: np.ndarray
+            Coordenades de l'origen del moviment
+        destination: np.ndarray
+            Coordenades de la destinació
+        magnet: bool
+            Si està a True eludirà les peces sobre el tauler
+
+        Returns
+        -------
+        list: np.ndarray
+            Llista de passos a seguir per arribar de l'origen a la destinació
+            (codificats com a vectors de la forma [x, y] on x,y [-{-1, 0, 1})
+        """
         matrix = self.route_matrix(origin, destination, magnet)
         position = np.copy(destination)
         route = []
@@ -190,6 +237,16 @@ class Route:
         return route
 
     def set_occupied(self) -> np.ndarray:
+        """
+        Genera una matriu de màscara per a determinar les caselles ocupades
+        per peces mortes a la banda del tauler.
+
+        Returns
+        -------
+        np.ndarray
+            Matriu de zeros de mida SIZE_WAVEFRONT amb les caselles ocupades en
+            forma de números 1
+        """
         occuppied = np.zeros(self.WAVEFRONT_SIZE, dtype=np.int)
         for i in range(self.capture_map.shape[0]):
             for j in range(self.capture_map.shape[1]):
@@ -198,6 +255,17 @@ class Route:
         return occuppied
 
     def draw_route(self, route: list, board_image: np.ndarray):
+        """
+        Representa el moviment sobre una de les imatges del dataset (calibrat
+        amb els renders de /datasets/early-test
+
+        Parameters
+        ----------
+        route: list: np.ndarray
+            Llista de moviments codificats com l'output de route_calculate
+        board_image: np.ndarray
+            Imatge sobre la qual dibuixar el moviment
+        """
         plt.figure(figsize=(12, 8))
         plt.imshow(board_image)
         current_position = np.copy(self.ORIGEN_IMATGE)
@@ -211,6 +279,20 @@ class Route:
 
 
     def find_empty_pos(self, symbol: str) -> np.ndarray:
+        """
+        Troba una posició buida a la qual emplaçar una peça morta, la retorna
+        i la configura com a ocupada.
+
+        Parameters
+        ----------
+        symbol: str
+            Símbol de la peça que es vol prendre
+
+        Returns
+        -------
+        np.ndarray
+            Coordenades on emplaçar la peça
+        """
         for i in self.PIECE_POSITIONS[symbol]:
             if not self.capture_map[i[0], i[1]]:
                 self.capture_map[i[0], i[1]] = True
@@ -218,6 +300,20 @@ class Route:
 
 
     def find_dead_piece(self, symbol: str):
+        """
+        Troba una casella on hi ha una peça morta (per a les promocions), la
+        retorna i la configura com a lliure
+
+        Parameters
+        ----------
+        symbol: str
+            Símbol de la peça
+
+        Returns
+        -------
+        np.ndarray
+            Coordenades de la peça
+        """
         for i in self.PIECE_POSITIONS[symbol]:
             if self.capture_map[i[0], i[1]]:
                 self.capture_map[i[0], i[1]] = False
