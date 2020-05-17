@@ -29,6 +29,12 @@ class Route:
         "K": [(1, 4)],
     }
 
+    WAVEFRONT_ZERO = np.array([0, 0])
+    WAVEFRONT_SIZE = np.array([15, 20])
+    WAVEFRONT_MAGNET = np.array([[1 if x % 2 == 0 and x < 0 else 0 for x in range(-16,4)]
+                                 if x % 2 == 0 else [0 for y in range(-16, 4)] for x in range(0, 15)],
+                                dtype=np.int)
+
     def __init__(self, status: str):
         """
         Inicialitza l'estat de l'objecte per a considerar les peces que s'han
@@ -53,7 +59,7 @@ class Route:
 
     def route_calculate(self, move: str):
         """
-        Utilitza una representacio watershed per trobar el cami mes rapid per
+        Utilitza una representacio wavefront per trobar el cami mes rapid per
         arribar a la casella de destinacio. Te en compte la natura del moviment
         i es genera unicament amb connectivitat a 4.
 
@@ -72,8 +78,60 @@ class Route:
         coronacio = True if "=" in move else False
         enroc = True if "*" in move else False
 
-    def route_segment(self, origin: np.ndarray, destination: np.ndarray):
-        pass
+    def route_matrix(self, origin: np.ndarray, destination: np.ndarray, magnet: bool = False):
+        wavefront_matrix = np.zeros(self.WAVEFRONT_SIZE, dtype=np.int)
+
+        if magnet:
+            wavefront_matrix += self.WAVEFRONT_MAGNET + self.set_occupied()
+
+        wavefront_matrix[origin[0], origin[1]] = 2
+        move_heap = [origin + direction for direction in self.FULL_DIRECTIONS
+                     if not np.any(self.WAVEFRONT_ZERO > origin + direction)
+                     and not np.any(origin + direction > self.WAVEFRONT_SIZE)]
+        move_heap = [move for move in move_heap if np.all(wavefront_matrix[move[0], move[1]] == 0)]
+
+        for move in move_heap:
+            wavefront_matrix[move[0], move[1]] = 3
+
+        while move_heap != []:
+            position = move_heap.pop()
+            moves = [position + direction for direction in self.FULL_DIRECTIONS
+                     if not np.any(self.WAVEFRONT_ZERO > position + direction)
+                     and not np.any(position + direction > self.WAVEFRONT_SIZE)]
+            moves = [move for move in moves if np.all(wavefront_matrix[move[0], move[1]] == 0)]
+
+            for move in moves:
+                if wavefront_matrix[move[0], move[1]] == 0:
+                    wavefront_matrix[move[0], move[1]] = wavefront_matrix[position[0], position[1]] + 1
+                if np.all(move == destination):
+                    return wavefront_matrix
+
+            move_heap = moves + move_heap
+        return None
+
+    def route_segment(self, origin: np.ndarray, destination: np.ndarray, magnet: bool):
+        matrix = self.route_matrix(origin, destination, magnet)
+        position = destination
+        route = []
+
+        while not np.all(position == origin):
+            moves = [direction for direction in self.FULL_DIRECTIONS
+                     if not np.any(self.WAVEFRONT_ZERO > position + direction)
+                     and not np.any(position + direction > self.WAVEFRONT_SIZE)]
+            step = [move for move in moves if np.all(matrix[(position+move)[0],
+                                                            (position+move)[1]] == matrix[position[0], position[1]] - 1)][0]
+            route.append(step)
+            position += step
+        return route
+
+    def set_occupied(self) -> np.ndarray:
+        occuppied = np.zeros(self.WAVEFRONT_SIZE, dtype=np.int)
+        for i in range(self.capture_map.shape[0]):
+            for j in range(self.capture_map.shape[1]):
+                if self.capture_map[i, j]:
+                    occuppied[2*j, i + 16] = 1
+        return occuppied
+
 
     def draw_route(self, route: list, board_image: np.ndarray):
         pass

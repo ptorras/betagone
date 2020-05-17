@@ -21,7 +21,7 @@ class Wrapper:
         context per simplificar el modul de control i minimitzar l'acoblament
 
         La representacio es la seguent:
-            <columna_origen> <fila_origen> <columna_desti> <fila_desti> [<opt>]
+            <columna_origen> <fila_origen> <columna_desti> <fila_desti> [<opt>] EN FORMAT 0-7
         Aquests numeros van de 0 a 7 respectivament
         Els opcionals <opt> poden ser:
             -> Captura: x <simbol_peça> (e <columna_alpas> <fila_alpas>)
