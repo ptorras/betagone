@@ -35,10 +35,6 @@ def main():
 
     # Generar l'objecte de control
     route_maker = Route(board_fen_post)
-    matrix = route_maker.route_matrix(np.array([2, 3]), np.array([7,8]), True)
-    route = route_maker.route_segment(np.array([2, 3]), np.array([7,8]), True)
-
-    print(matrix)
 
     # Detectar la posicio del tauler
 
@@ -50,13 +46,15 @@ def main():
     # Calcular la millor jugada
     move = engine.process_position(board_fen_post)
     strmove = engine.translate_move(move)
-    print(move)
+    engine.move(move)
+    print(strmove)
     engine.shutdown()
 
     # Calcular la ruta a seguir
+    ruta = route_maker.route_calculate(strmove)
 
     # Fer la ruta
-
+    pass
 
 if __name__ == "__main__":
     main()

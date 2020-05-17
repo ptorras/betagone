@@ -15,6 +15,9 @@ class Wrapper:
 
         return move.move
 
+    def move(self, move: chess.Move):
+        self.board.push(move)
+
     def translate_move(self, move:chess.Move) -> str:
         """
         Converteix la representacio de la jugada en un format indepentent de
@@ -57,7 +60,7 @@ class Wrapper:
         if self.board.is_castling(move):
             ret_move += "*"
         if len(string_move) == 5:
-            ret_move += "=" + string_move[-1].upper() if self.board.turn == chess.BLACK else string_move[-1].lower()
+            ret_move += "=" + string_move[-1].upper() if self.board.turn == chess.WHITE else string_move[-1].lower()
         ret_move += "]"
 
         return ret_move
