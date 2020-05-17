@@ -41,8 +41,8 @@ def cutndsave(img, num, piece, color, path):
     boxes = p.cut_boxes(img)
 
     for i, box in enumerate(boxes):
-        imname = path+'/'+pi+color+'_'+str('{0:04}'.format(num+i))+'.png'
-        cv2.imwrite(imname,box)
+        im_name = path+'/'+pi+color+'_'+str('{0:04}'.format(num+i))+'.png'
+        cv2.imwrite(im_name,box)
 
 def generateDataset():
     for piece in pieces:
