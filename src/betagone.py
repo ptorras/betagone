@@ -8,7 +8,7 @@ import numpy as np
 def main():
 
     # Carregar els fitxer de test corresponent
-    test = "00006"
+    test = "00007"
 
     board_image_prior = plt.imread("../datasets/early-test/" + test + "_prior.png")
     board_image_post = plt.imread("../datasets/early-test/" + test + "_post.png")
@@ -52,6 +52,7 @@ def main():
 
     # Calcular la ruta a seguir
     ruta = route_maker.route_calculate(strmove)
+    route_maker.draw_route(ruta, board_image_post)
 
     # Fer la ruta
     pass

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Route:
     DIR_NORTH = np.array([ 0,  1])
@@ -13,6 +14,8 @@ class Route:
 
     MANHATTAN_DIRECTIONS = [DIR_NORTH, DIR_EAST, DIR_SOUTH, DIR_WEST]
     FULL_DIRECTIONS = [DIR_NORTH, DIR_NE, DIR_EAST, DIR_SE, DIR_SOUTH, DIR_SW, DIR_WEST, DIR_NW]
+
+    DIRECTIONS = MANHATTAN_DIRECTIONS
 
     PIECE_POSITIONS = {
         "p": [(2, x) for x in range(8)],
@@ -36,10 +39,20 @@ class Route:
                                 dtype=np.int)
 
     ORIGEN_MOVIMENT = np.array([0, 16])
+    ORIGEN_IMATGE = np.array([72,1559])
+    MIDA_QUADRAT = np.array([67,67])
 
     ENROC = {
-        "06": np.array([]),
-        "02": np.array([]),
+        "60": np.array([14, 14]),
+        "20": np.array([14, 0]),
+        "67": np.array([0, 14]),
+        "27": np.array([0, 0])
+    }
+    DEST_TORRE = {
+        "60": np.array([14, 10]),
+        "20": np.array([14, 6]),
+        "67": np.array([0, 10]),
+        "27": np.array([0, 6])
     }
 
     def __init__(self, status: str):
@@ -90,7 +103,13 @@ class Route:
         abs_dest = np.array([(7-int(move[3]))*2, (int(move[2]))*2])
 
         if enroc:
-            pass
+            posicio_torre = self.ENROC[move[2:4]]
+            dest_torre = self.DEST_TORRE[move[2:4]]
+            full_route += self.route_segment(self.ORIGEN_MOVIMENT, abs_origen, False)
+            full_route += self.route_segment(abs_origen, abs_dest, True)
+            full_route += self.route_segment(abs_dest, posicio_torre, False)
+            full_route += self.route_segment(posicio_torre, dest_torre, True)
+            full_route += self.route_segment(dest_torre, self.ORIGEN_MOVIMENT, False)
         else:
             if captura and not alpas:
                 piece = move[move.find('x')+1]
@@ -108,8 +127,8 @@ class Route:
                 full_route += self.route_segment(dest, abs_origen, False)
                 full_route += self.route_segment(abs_origen, abs_dest, True)
             elif not enroc:
-                full_route += self.route_segment(self.ORIGEN_MOVIMENT, abs_origen)
-                full_route += self.route_segment(abs_origen, abs_dest)
+                full_route += self.route_segment(self.ORIGEN_MOVIMENT, abs_origen, False)
+                full_route += self.route_segment(abs_origen, abs_dest, True)
 
             if coronacio:
                 piece = move[move.find("=")+1]
@@ -119,9 +138,8 @@ class Route:
                 full_route += self.route_segment(dest_pawn, dest_dead, False)
                 full_route += self.route_segment(dest_dead, abs_dest, True)
 
-        full_route += self.route_segment(abs_dest, self.ORIGEN_MOVIMENT, False)
+            full_route += self.route_segment(abs_dest, self.ORIGEN_MOVIMENT, False)
         return full_route
-
 
     def route_matrix(self, origin: np.ndarray, destination: np.ndarray, magnet: bool = False):
         wavefront_matrix = np.zeros(self.WAVEFRONT_SIZE, dtype=np.int)
@@ -132,7 +150,7 @@ class Route:
         wavefront_matrix[origin[0], origin[1]] = 2
         wavefront_matrix[destination[0], destination[1]] = 0
 
-        move_heap = [origin + direction for direction in self.FULL_DIRECTIONS
+        move_heap = [origin + direction for direction in self.DIRECTIONS
                      if not np.any(self.WAVEFRONT_ZERO > origin + direction)
                      and not np.any(origin + direction >= self.WAVEFRONT_SIZE)]
         move_heap = [move for move in move_heap if np.all(wavefront_matrix[move[0], move[1]] == 0)]
@@ -142,7 +160,7 @@ class Route:
 
         while move_heap != []:
             position = move_heap.pop()
-            moves = [position + direction for direction in self.FULL_DIRECTIONS
+            moves = [position + direction for direction in self.DIRECTIONS
                      if not np.any(self.WAVEFRONT_ZERO > position + direction)
                      and not np.any(position + direction >= self.WAVEFRONT_SIZE)]
             moves = [move for move in moves if np.all(wavefront_matrix[move[0], move[1]] == 0)]
@@ -154,7 +172,6 @@ class Route:
                     return wavefront_matrix
 
             move_heap = moves + move_heap
-            print(wavefront_matrix)
         return None
 
     def route_segment(self, origin: np.ndarray, destination: np.ndarray, magnet: bool):
@@ -163,7 +180,7 @@ class Route:
         route = []
 
         while not np.all(position == origin):
-            moves = [direction for direction in self.FULL_DIRECTIONS
+            moves = [direction for direction in self.DIRECTIONS
                      if not np.any(self.WAVEFRONT_ZERO > position + direction)
                      and not np.any(position + direction >= self.WAVEFRONT_SIZE)]
             step = [move for move in moves if np.all(matrix[(position+move)[0],
@@ -180,9 +197,18 @@ class Route:
                     occuppied[2*j, i + 16] = 1
         return occuppied
 
-
     def draw_route(self, route: list, board_image: np.ndarray):
-        pass
+        plt.figure()
+        plt.imshow(board_image)
+        current_position = np.copy(self.ORIGEN_IMATGE)
+        for num, i in enumerate(route):
+            increment = np.multiply(i, self.MIDA_QUADRAT)
+            plt.arrow(current_position[1], current_position[0], increment[1], increment[0], shape="left",
+                      length_includes_head=True, width=0.5, color='b')
+            plt.text(current_position[1] - 25, current_position[0], str(num), color='b')
+            current_position = current_position + increment
+        plt.show()
+
 
     def find_empty_pos(self, symbol: str) -> np.ndarray:
         for i in self.PIECE_POSITIONS[symbol]:
