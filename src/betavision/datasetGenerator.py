@@ -14,11 +14,11 @@ pieces = 'bknpqr'
 
 board = cv2.imread('../../datasets/pieces-full/empty.png')
 path_dataset = '../../datasets/pieces/'
-path_images = '../../datasets/pieces-full/'
+path_images = '../../datasets/data4neuralv2/images/'
 
-wipe=True
+wipe=False
 
-p = v.PieceDetector(board)
+p = v.PieceDetector(board, './checkpoint-100.pth')
 
 def generateFolders(path):
     folders = ['train', 'test', 'val']
@@ -133,7 +133,7 @@ def generateDataset():
             cutndsave(im, num, piece, 'w',path2saveim)
             num += 64
 
-    cutndsave(board, 0, 'b', None,'../../datasets/pieces/board')
+    cutndsave(board, 0, 'board', None,'../../datasets/pieces/board')
 
 #TODO: add arguments ?????? idk
 

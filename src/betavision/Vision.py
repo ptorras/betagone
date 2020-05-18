@@ -17,7 +17,7 @@ class PieceDetector:
         self._board = board_image
         self._points, self._step = self.__getCorners()
 
-        self.model = models.AlexNet()
+        self.model = models.vgg16()
         self.checkpoint = torch.load(chkp)
         #self.model.load_state_dict(self.checkpoint['model_state_dict'])
         #self.model.eval()
@@ -25,9 +25,9 @@ class PieceDetector:
 
     def __load_checkpoint(self):
 
-        if self.checkpoint['arch'] == 'alexnet':
+        if self.checkpoint['arch'] == 'vgg16':
 
-            self.model = models.alexnet(pretrained=True)
+            self.model = models.vgg16(pretrained=True)
 
             for param in self.model.parameters():
                 param.requires_grad = False
@@ -36,7 +36,7 @@ class PieceDetector:
 
         self.model.class_to_idx = self.checkpoint['class_to_idx']
 
-        classifier = nn.Sequential(OrderedDict([('fc1', nn.Linear(9216, 4096)),
+        classifier = nn.Sequential(OrderedDict([('fc1', nn.Linear(25088, 4096)),
                                                 ('relu', nn.ReLU()),
                                                 ('drop', nn.Dropout(p=0.5)),
                                                 ('fc2', nn.Linear(4096, 13)),
@@ -116,7 +116,7 @@ class PieceDetector:
             image_path = '../../datasets/data4neural/test/box_0'+str(i)+'.png'
             cv2.imwrite(image_path, box)
             pil_image = Image.open(image_path)
-            top_probabilities, top_classes = self.predict(pil_image, 13)
+            top_probabilities, top_classes = self.predict(pil_image)
             print(top_classes[0])
 
     def predict(self, pil_image, topk=5):
@@ -159,7 +159,7 @@ def main():
     #Exemple de com funciona:
     board = cv2.imread("./testpic/taulell.png")
     actual_board = cv2.imread("../../datasets/early-test/00001_post.png")
-    p = PieceDetector(board,'./checkpoint-100.pth')
+    p = PieceDetector(board,'./checkpoint-100v2.pth')
     p.detect_pieces(actual_board)
 
 

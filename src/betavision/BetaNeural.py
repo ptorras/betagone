@@ -96,12 +96,12 @@ def piece2name(pieces, colors):
     return pieces_to_name
 
 def init_nd_config_model():
-    model = models.alexnet(pretrained=True)
+    model = models.vgg16(pretrained=True)
     print(model)
     for parameter in model.parameters():
         parameter.requires_grad = False
 
-    classifier = nn.Sequential(OrderedDict([('fc1', nn.Linear(9216, 4096)),
+    classifier = nn.Sequential(OrderedDict([('fc1', nn.Linear(25088, 4096)),
                                             ('relu', nn.ReLU()),
                                             ('drop', nn.Dropout(p=0.5)),
                                             ('fc2', nn.Linear(4096, 13)),
@@ -130,7 +130,7 @@ def validation(model, validateloader, criterion):
 
 def train_classifier(model, optimizer, criterion, train_loader, validate_loader):
 
-    epochs = 100
+    epochs = 70
     steps = 0
     print_every = 40
 
@@ -197,12 +197,12 @@ def save_checkpoint(model, training_dataset):
 
     model.class_to_idx = training_dataset.class_to_idx
 
-    checkpoint = {'arch': "alexnet",
+    checkpoint = {'arch': "vgg16",
                   'class_to_idx': model.class_to_idx,
                   'model_state_dict': model.state_dict()
                  }
 
-    torch.save(checkpoint, 'checkpoint-100.pth')
+    torch.save(checkpoint, 'checkpoint-100v2.pth')
 
 def is_cuda_available():
     # setting device on GPU if available, else CPU
@@ -269,7 +269,7 @@ def main():
 
     m, s = divmod(time, 60)
     h, m = divmod(m, 60)
-    print(f'{h:d}:{m:02d}:{s:02d}')
+    print('{:d}:{:02d}:{:02d}'.format(h, m, s))
 
     #test_accuracy(model, test_loader)
 
