@@ -14,16 +14,18 @@ from torch import optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms, models
 
-
 pieces = 'bknpqr'
 colors = 'bw'
 board = 'board'
 
-dataset_folder = '../../datasets/pieces/'
+dataset_folder = '../../datasets/data4neural'
+train_dir = dataset_folder+'/train'
+test_dir = dataset_folder+'/test'
+val_dir = dataset_folder+'/val'
 
 def load_piece_dataset(pieces):
-
     data = list()
+
     for piece in pieces:
         path = str.lower(dataset_folder + piece + '/' + piece + '*.png')
         for file in glob.glob(path):
@@ -36,9 +38,50 @@ def load_piece_dataset(pieces):
         im = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
         data.append(im)
 
-    return np.asarray(data)
+    data = np.asarray(data)
 
-def piece2name(pieces,colors):
+    training_nd_validation, testing_dataset = train_test_split(data, shuffle=True)
+    training_dataset, validation_dataset = train_test_split(training_nd_validation, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=64, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=32)
+    validate_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32)
+
+    return train_loader, test_loader, validate_loader
+
+def load_piece_dataset_v2():
+    training_transforms = transforms.Compose([transforms.RandomRotation(30),
+                                              transforms.RandomResizedCrop(224),
+                                              transforms.RandomHorizontalFlip(),
+                                              transforms.Grayscale(),
+                                              transforms.ToTensor(),
+                                              transforms.Normalize([0.485, 0.456, 0.406],
+                                                                   [0.229, 0.224, 0.225])])
+
+    validation_transforms = transforms.Compose([transforms.Resize(256),
+                                                transforms.CenterCrop(224),
+                                                transforms.Grayscale(),
+                                                transforms.ToTensor(),
+                                                transforms.Normalize([0.485, 0.456, 0.406],
+                                                                     [0.229, 0.224, 0.225])])
+
+    testing_transforms = transforms.Compose([transforms.Resize(256),
+                                             transforms.CenterCrop(224),
+                                             transforms.Grayscale(),
+                                             transforms.ToTensor(),
+                                             transforms.Normalize([0.485, 0.456, 0.406],
+                                                                  [0.229, 0.224, 0.225])])
+
+    training_dataset = datasets.ImageFolder(train_dir, transform=training_transforms)
+    validation_dataset = datasets.ImageFolder(val_dir, transform=validation_transforms)
+    testing_dataset = datasets.ImageFolder(test_dir, transform=testing_transforms)
+
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=64, shuffle=True)
+    validate_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32)
+    test_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=32)
+
+    return train_loader, validate_loader, test_loader
+
+def piece2name(pieces, colors):
     pieces_to_name = dict()
     N = len(pieces)
     x = 0
@@ -84,7 +127,6 @@ def validation(model, validateloader, criterion):
         accuracy += equality.type(torch.FloatTensor).mean()
 
     return val_loss, accuracy
-
 
 def train_classifier(model, optimizer, criterion, train_loader, validate_loader):
 
@@ -162,17 +204,10 @@ def save_checkpoint(model, training_dataset):
 
     torch.save(checkpoint, 'checkpoint.pth')
 
-
 def main():
     # LOADING DATASETS
-    data = load_piece_dataset(pieces)
-    pieces_to_names = piece2name(pieces,colors)
-    training_nd_validation, testing_dataset = train_test_split(data, shuffle=True)
-    training_dataset, validation_dataset = train_test_split(training_nd_validation, test_size=0.25, shuffle=True)
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=32)
-    validate_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32)
-
+    train_loader, validate_loader, test_loader = load_piece_dataset_v2()
+    pieces_to_names = piece2name(pieces, colors)
 
     model = init_nd_config_model()
     criterion = nn.NLLLoss()
@@ -183,8 +218,6 @@ def main():
     test_accuracy(model, test_loader)
 
     #save_checkpoint(model, training_dataset)
-
-
 
 if __name__ == '__main__':
     main()

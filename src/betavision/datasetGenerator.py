@@ -4,6 +4,12 @@ import glob
 import os, shutil
 import time
 
+N = (11*2*64)
+Nb = 64
+t_test = 0.2
+t_val = 0.2
+t_train = 0.6
+
 pieces = 'bknpqr'
 
 board = cv2.imread('../../datasets/pieces-full/empty.png')
@@ -14,10 +20,16 @@ wipe=True
 
 p = v.PieceDetector(board)
 
-def wipeAllData():
-    folders = ['b', 'board', 'k', 'n', 'p', 'q', 'r']
+def wipeAllData(folder):
+    if folder ==  'pieces':
+        folders = ['b', 'board', 'k', 'n', 'p', 'q', 'r']
+        path = path_dataset
+    elif folder == 'data4neural':
+        path = '../../datasets/data4neural/'
+        folders = ['train', 'test', 'val']
+
     for piece in folders:
-        folder = path_dataset+piece
+        folder = path+piece
         for filename in os.listdir(folder):
             file_path = os.path.join(folder, filename)
             try:
@@ -44,6 +56,53 @@ def cutndsave(img, num, piece, color, path):
         im_name = path+'/'+pi+color+'_'+str('{0:04}'.format(num+i))+'.png'
         cv2.imwrite(im_name,box)
 
+def cutndsave_v2(img, num, piece, color, path):
+
+    if color=='w':
+        pi = str.upper(piece)
+        X = N
+    elif color == 'b':
+        pi = piece
+        X = N
+    else:
+        pi = piece
+        color = ''
+        X = Nb
+
+    boxes = p.cut_boxes(img)
+
+    for i, box in enumerate(boxes):
+        n = num + i
+
+        if n < (X*t_train):
+            folder = '/train'
+        elif n > (X*t_train) and n < (X*t_train + X*t_test):
+            folder = '/test'
+        elif n > (X*t_train + X*t_test) and n < X:
+            folder = '/val'
+
+        im_name = path + folder + '/' + pi + color + '_' + str('{0:04}'.format(n)) + '.png'
+        cv2.imwrite(im_name,box)
+
+def generateDataset_v2():
+    for piece in pieces:
+        num = 0
+        path2saveim = '../../datasets/data4neural'
+        file_path_white = str.lower(path_images+piece+'w*.png')
+        file_path_black = str.lower(path_images+piece+'b*.png')
+
+        for file in glob.glob(file_path_black):
+            im = cv2.imread(file)
+            cutndsave_v2(im, num, piece, 'b',path2saveim)
+            num += 64
+
+        for file in glob.glob(file_path_white):
+            im = cv2.imread(file)
+            cutndsave_v2(im, num, piece, 'w',path2saveim)
+            num += 64
+
+    cutndsave_v2(board, 0, 'b', None,'../../datasets/data4neural')
+
 def generateDataset():
     for piece in pieces:
         num = 0
@@ -68,13 +127,21 @@ def generateDataset():
 def main():
 
     if wipe:
-        wipeAllData()
+        wipeAllData('data4neural')
 
     start = time.time()
-    generateDataset()
+    #generateDataset()
+    generateDataset_v2()
     end = time.time()
 
     print('Elapsed time:',str(round((end-start),2))+'s')
+
+    files = os.listdir('../../datasets/data4neural/train')
+    print('Files train:', len(files))
+    files = os.listdir('../../datasets/data4neural/test')
+    print('Files test:', len(files))
+    files = os.listdir('../../datasets/data4neural/val')
+    print('Files val:', len(files))
 
 if __name__ == '__main__':
     main()
