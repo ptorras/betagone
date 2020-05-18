@@ -5,6 +5,7 @@ import time as t
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sb
+from PIL import Image
 import cv2
 import glob
 
@@ -64,11 +65,11 @@ def load_piece_dataset_v2():
                                                 transforms.Normalize([0.485, 0.456, 0.406],
                                                                      [0.229, 0.224, 0.225])])
 
-    testing_transforms = transforms.Compose([transforms.Resize(256),
-                                             transforms.CenterCrop(224),
-                                             transforms.ToTensor(),
-                                             transforms.Normalize([0.485, 0.456, 0.406],
-                                                                  [0.229, 0.224, 0.225])])
+    # testing_transforms = transforms.Compose([transforms.Resize(256),
+    #                                          transforms.CenterCrop(224),
+    #                                          transforms.ToTensor(),
+    #                                          transforms.Normalize([0.485, 0.456, 0.406],
+    #                                                               [0.229, 0.224, 0.225])])
 
     training_dataset = datasets.ImageFolder(train_dir, transform=training_transforms)
     validation_dataset = datasets.ImageFolder(val_dir, transform=validation_transforms)
@@ -196,12 +197,12 @@ def save_checkpoint(model, training_dataset):
 
     model.class_to_idx = training_dataset.class_to_idx
 
-    checkpoint = {'arch': "vgg16",
+    checkpoint = {'arch': "alexnet",
                   'class_to_idx': model.class_to_idx,
                   'model_state_dict': model.state_dict()
                  }
 
-    torch.save(checkpoint, 'checkpoint.pth')
+    torch.save(checkpoint, 'checkpoint-100.pth')
 
 def is_cuda_available():
     # setting device on GPU if available, else CPU
@@ -216,6 +217,39 @@ def is_cuda_available():
         print('Allocated:', round(torch.cuda.memory_allocated(0) / 1024 ** 3, 1), 'GB')
         print('Cached:   ', round(torch.cuda.memory_cached(0) / 1024 ** 3, 1), 'GB')
 
+def process_image(pil_image):
+    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
+        returns an Numpy array
+    '''
+
+    # Process a PIL image for use in a PyTorch model
+
+    # Resize
+    if pil_image.size[0] > pil_image.size[1]:
+        pil_image.thumbnail((5000, 256))
+    else:
+        pil_image.thumbnail((256, 5000))
+
+    # Crop
+    left_margin = (pil_image.width - 224) / 2
+    bottom_margin = (pil_image.height - 224) / 2
+    right_margin = left_margin + 224
+    top_margin = bottom_margin + 224
+
+    pil_image = pil_image.crop((left_margin, bottom_margin, right_margin, top_margin))
+
+    # Normalize
+    np_image = np.array(pil_image) / 255
+    mean = np.array([0.485, 0.456, 0.406])
+    std = np.array([0.229, 0.224, 0.225])
+    np_image = (np_image - mean) / std
+
+    # PyTorch expects the color channel to be the first dimension but it's the third dimension in the PIL image and Numpy array
+    # Color channel needs to be first; retain the order of the other two dimensions.
+    np_image = np_image.transpose((2, 0, 1))
+
+    return np_image
+
 def main():
     #LOADING DATASETS
     is_cuda_available()
@@ -228,13 +262,18 @@ def main():
 
     start = t.time()
     train_classifier(model, optimizer, criterion, train_loader, validate_loader)
+    save_checkpoint(model, training_dataset)
     end = t.time()
 
-    print('Elapsed time:', str(round((end-start),2))+'s')
+    time = end - start
+
+    m, s = divmod(time, 60)
+    h, m = divmod(m, 60)
+    print(f'{h:d}:{m:02d}:{s:02d}')
 
     #test_accuracy(model, test_loader)
 
-    save_checkpoint(model, training_dataset)
+
 
 if __name__ == '__main__':
     main()
