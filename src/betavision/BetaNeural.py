@@ -1,7 +1,7 @@
 from sklearn.model_selection import train_test_split
 from collections import OrderedDict
 import numpy as np
-
+import time as t
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sb
@@ -9,6 +9,8 @@ import cv2
 import glob
 
 import torch
+import ctypes
+ctypes.cdll.LoadLibrary('caffe2_nvrtc.dll')
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
@@ -52,34 +54,31 @@ def load_piece_dataset_v2():
     training_transforms = transforms.Compose([transforms.RandomRotation(30),
                                               transforms.RandomResizedCrop(224),
                                               transforms.RandomHorizontalFlip(),
-                                              transforms.Grayscale(),
                                               transforms.ToTensor(),
                                               transforms.Normalize([0.485, 0.456, 0.406],
                                                                    [0.229, 0.224, 0.225])])
 
     validation_transforms = transforms.Compose([transforms.Resize(256),
                                                 transforms.CenterCrop(224),
-                                                transforms.Grayscale(),
                                                 transforms.ToTensor(),
                                                 transforms.Normalize([0.485, 0.456, 0.406],
                                                                      [0.229, 0.224, 0.225])])
 
     testing_transforms = transforms.Compose([transforms.Resize(256),
                                              transforms.CenterCrop(224),
-                                             transforms.Grayscale(),
                                              transforms.ToTensor(),
                                              transforms.Normalize([0.485, 0.456, 0.406],
                                                                   [0.229, 0.224, 0.225])])
 
     training_dataset = datasets.ImageFolder(train_dir, transform=training_transforms)
     validation_dataset = datasets.ImageFolder(val_dir, transform=validation_transforms)
-    testing_dataset = datasets.ImageFolder(test_dir, transform=testing_transforms)
+    #testing_dataset = datasets.ImageFolder(test_dir, transform=testing_transforms)
 
     train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=64, shuffle=True)
     validate_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32)
-    test_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=32)
+    #test_loader = torch.utils.data.DataLoader(testing_dataset, batch_size=32)
 
-    return train_loader, validate_loader, test_loader
+    return train_loader, training_dataset, validate_loader #,test_loader
 
 def piece2name(pieces, colors):
     pieces_to_name = dict()
@@ -116,7 +115,7 @@ def validation(model, validateloader, criterion):
     accuracy = 0
 
     for images, labels in iter(validateloader):
-        images, labels = images.to('cuda'), labels.to('cuda')
+        images, labels = images.to('cuda:0'), labels.to('cuda:0')
 
         output = model.forward(images)
         val_loss += criterion(output, labels).item()
@@ -130,11 +129,11 @@ def validation(model, validateloader, criterion):
 
 def train_classifier(model, optimizer, criterion, train_loader, validate_loader):
 
-    epochs = 15
+    epochs = 100
     steps = 0
     print_every = 40
 
-    model.to('cuda')
+    model.to('cuda:0')
 
     for e in range(epochs):
 
@@ -146,7 +145,7 @@ def train_classifier(model, optimizer, criterion, train_loader, validate_loader)
 
             steps += 1
 
-            images, labels = images.to('cuda'), labels.to('cuda')
+            images, labels = images.to('cuda:0'), labels.to('cuda:0')
 
             optimizer.zero_grad()
 
@@ -175,13 +174,13 @@ def train_classifier(model, optimizer, criterion, train_loader, validate_loader)
 def test_accuracy(model, test_loader):
     # Do validation on the test set
     model.eval()
-    model.to('cuda')
+    model.to('cuda:0')
 
     with torch.no_grad():
         accuracy = 0
 
         for images, labels in iter(test_loader):
-            images, labels = images.to('cuda'), labels.to('cuda')
+            images, labels = images.to('cuda:0'), labels.to('cuda:0')
 
             output = model.forward(images)
 
@@ -204,20 +203,38 @@ def save_checkpoint(model, training_dataset):
 
     torch.save(checkpoint, 'checkpoint.pth')
 
+def is_cuda_available():
+    # setting device on GPU if available, else CPU
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print('Using device:', device)
+    print()
+
+    # Additional Info when using cuda
+    if device.type == 'cuda':
+        print(torch.cuda.get_device_name(0))
+        print('Memory Usage:')
+        print('Allocated:', round(torch.cuda.memory_allocated(0) / 1024 ** 3, 1), 'GB')
+        print('Cached:   ', round(torch.cuda.memory_cached(0) / 1024 ** 3, 1), 'GB')
+
 def main():
-    # LOADING DATASETS
-    train_loader, validate_loader, test_loader = load_piece_dataset_v2()
+    #LOADING DATASETS
+    is_cuda_available()
+    train_loader, training_dataset, validate_loader = load_piece_dataset_v2()
     pieces_to_names = piece2name(pieces, colors)
 
     model = init_nd_config_model()
     criterion = nn.NLLLoss()
     optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
 
+    start = t.time()
     train_classifier(model, optimizer, criterion, train_loader, validate_loader)
+    end = t.time()
 
-    test_accuracy(model, test_loader)
+    print('Elapsed time:', str(round((end-start),2))+'s')
 
-    #save_checkpoint(model, training_dataset)
+    #test_accuracy(model, test_loader)
+
+    save_checkpoint(model, training_dataset)
 
 if __name__ == '__main__':
     main()
