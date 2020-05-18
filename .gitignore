@@ -358,3 +358,4 @@ MigrationBackup/
 src/betatest/gamedb/lichess_db_standard_rated_2014-01.ini
 src/betatest/gamedb/lichess_db_standard_rated_2014-01.pgi
 src/betatest/gamedb/lichess_db_standard_rated_2014-01.pgn
+*.pth
