@@ -359,3 +359,4 @@ src/betatest/gamedb/lichess_db_standard_rated_2014-01.pgi
 src/betatest/gamedb/lichess_db_standard_rated_2014-01.pgn
 *.pth
 /src/temp*
+src/stockfish_hook/stockfish-11-win*

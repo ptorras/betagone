@@ -1,5 +1,4 @@
 class GPIO:
-
     def __init__(self):
         pass
 
@@ -7,7 +6,6 @@ class GPIO:
         print("send to GPIO pin: " + pin + " the value of: " + value)
 
     def setmode(self, mode):
-        mode = self.BCM
         print("The mode used is:" + mode)
 
     def setup(self, pin):

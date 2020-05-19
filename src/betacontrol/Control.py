@@ -1,7 +1,6 @@
 from time import sleep
-from fakeRPi import GPIO
+from FakeRPi import GPIO
 import numpy as np
-
 
 class Movement:
 
@@ -132,3 +131,9 @@ class Movement:
     print_board()
 
     GPIO.cleanup()
+
+def main():
+    "hello"
+
+if __name__ == "__main__":
+    main()
