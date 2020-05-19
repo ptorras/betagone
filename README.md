@@ -1,5 +1,15 @@
 # betagone
 An autonomous vision-based chess robot
+
+This currently uses Stockfish 11 for move generation: https://github.com/official-stockfish/Stockfish
+It's tailored to work with Anaconda / Python 3.7
+
+It requires:
+	- python-chess
+	- pytorch
+	- PIL
+	- cv2
+
 ## Directories
 
 ### src
