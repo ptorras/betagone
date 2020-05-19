@@ -1,21 +1,19 @@
-class GPIO:
-    def __init__(self):
-        pass
+HIGH = 1
+LOW = 0
+BCM = "numbering mode"
+mode = "default"
+OUT = "output"
 
-    def output(self, pin, value):
-        print("send to GPIO pin: " + pin + " the value of: " + value)
 
-    def setmode(self, mode):
-        print("The mode used is:" + mode)
+def output(pin, value):
+    print("send to GPIO pin: " + str(pin) + " the value of: " + str(value))
 
-    def setup(self, pin):
-        print("sets the GPIO pin num: " + pin + " as an output pin")
+def setmode(mode):
+    print("The mode used is:" + str(mode))
 
-    def cleanup(self):
-        print("clean the linked GPIO pins")
+def setup(pin, mode):
+    print("sets the GPIO pin num: " + str(pin) + " as " + str(mode) + " pin")
 
-    HIGH = 1
-    LOW = 0
-    BCM = "numbering mode"
-    mode = "default"
-    OUT = "output"
+def cleanup():
+    print("clean the linked GPIO pins")
+

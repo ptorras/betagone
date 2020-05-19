@@ -2,6 +2,7 @@ from stockfish_hook.Wrapper import Wrapper
 from betavision import Vision
 import matplotlib.pyplot as plt
 from betacontrol.Route import Route
+from betacontrol.Control import Movement
 import numpy as np
 import cv2
 
@@ -38,6 +39,7 @@ def main():
 
     # Generar l'objecte de control
     route_maker = Route(board_fen_post)
+    actuator = Movement()
 
     # Detectar la posicio del tauler
     position = vision_object.detect_pieces(board_cv2)
@@ -60,7 +62,7 @@ def main():
     route_maker.draw_route(ruta, board_image_post, magnet)
 
     # Fer la ruta
-    pass
+    actuator.make_route(ruta, magnet)
 
 if __name__ == "__main__":
     main()

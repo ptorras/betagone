@@ -1,5 +1,5 @@
 from time import sleep
-from FakeRPi import GPIO
+import FakeRPi as GPIO
 import numpy as np
 
 class Movement:
@@ -8,29 +8,21 @@ class Movement:
         pass
 
     def do_one_step_lineal(self, motor, direction):
-        delay = .02
 
         GPIO.output(motor["DIR"], direction)
         for x in range(self.step_count):
             GPIO.output(motor["STEP"], GPIO.HIGH)
-            sleep(delay)
             GPIO.output(motor["STEP"], GPIO.LOW)
-            sleep(delay)
-        sleep(.5)
 
     def do_one_step_diagonal(self, direction1, direction2):
-        delay = .02
 
         GPIO.output(self.MOTOR1["DIR"], direction1)
         GPIO.output(self.MOTOR2["DIR"], direction2)
         for x in range(self.step_count):
             GPIO.output(self.MOTOR1["STEP"], GPIO.HIGH)
             GPIO.output(self.MOTOR2["STEP"], GPIO.HIGH)
-            sleep(delay)
             GPIO.output(self.MOTOR1["STEP"], GPIO.LOW)
             GPIO.output(self.MOTOR2["STEP"], GPIO.LOW)
-            sleep(delay)
-        sleep(.5)
 
     def print_board(self):
         self.board = self.clearBoard
@@ -60,6 +52,17 @@ class Movement:
             return self.BACK
         elif valor == 1:
             return self.FW
+
+    def cleanup(self):
+        GPIO.cleanup()
+
+    def make_route(self, positions, magnet):
+        mag_on = False
+        for pos, mag in zip(positions, magnet):
+            self.move_to(pos)
+            if mag_on != mag:
+                mag_on = not mag_on
+                print("IMANT " + "on" if mag_on else "off")
 
     MOTOR1 = {
         "DIR": 20,  # Direction GPIO pin
@@ -127,13 +130,4 @@ class Movement:
     iniYMagnet = 16
     posXMagnet = iniXMagnet
     posYMagnet = iniYMagnet
-
-    print_board()
-
     GPIO.cleanup()
-
-def main():
-    "hello"
-
-if __name__ == "__main__":
-    main()
