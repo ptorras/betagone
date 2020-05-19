@@ -70,3 +70,14 @@ class Wrapper:
 
     def shutdown(self):
         self.engine.quit()
+
+    def check_compatible(self, current: str, post: str):
+        temp_board = chess.Board(current)
+        for i in temp_board.legal_moves:
+            temp_board.push(i)
+            fen = temp_board.fen()
+            if fen[fen:fen.index(' ')] == post:
+                return fen
+            else:
+                temp_board.pop()
+        return None
