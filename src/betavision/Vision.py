@@ -22,6 +22,22 @@ class PieceDetector:
         #self.model.load_state_dict(self.checkpoint['model_state_dict'])
         #self.model.eval()
         self.__load_checkpoint()
+        self.piece_dict = self.__load_dict()
+
+    def __load_dict(self):
+        classes = ('bb', 'bw', 'board', 'kb',
+                   'kw', 'nb', 'nw', 'pb',
+                   'pw', 'qb', 'qw', 'rb', 'rw')
+
+        fen_dict = ('b', 'B', '', 'k', 'K', 'n',
+                    'N', 'p', 'P', 'q', 'Q', 'r', 'R')
+
+        piece_dict = dict()
+
+        for classe, fen_dict in zip(classes, fen_dict):
+            piece_dict[classe] = fen_dict
+
+        return piece_dict
 
     def __load_checkpoint(self):
 
@@ -111,13 +127,17 @@ class PieceDetector:
 
     def detect_pieces(self, actual_board:np.ndarray) -> str:
         boxes = self.cut_boxes(actual_board)
+        pieces = list()
 
         for i, box in enumerate(boxes):
-            image_path = '../../datasets/data4neural/test/box_0'+str(i)+'.png'
+            image_path = '../../datasets/actual-board/box_0'+str(i)+'.png'
             cv2.imwrite(image_path, box)
             pil_image = Image.open(image_path)
             top_probabilities, top_classes = self.predict(pil_image)
-            print(top_classes[0])
+            print((i+1),':', str.upper(top_classes[0])+',', top_probabilities[0])
+            pieces.append(self.piece_dict[top_classes[0]])
+
+        return self.position_to_fen(pieces)
 
     def predict(self, pil_image, topk=5):
         ''' Predict the class (or classes) of an image using a trained deep learning model.
@@ -154,14 +174,35 @@ class PieceDetector:
 
         return top_probabilities, top_classes
 
+    def position_to_fen(self, position):
+        fen = ""
+        counter = 0
+        for index, i in enumerate(position):
+            if (index % 8) == 0 and index != 0:
+                if counter != 0:
+                    fen += str(counter)
+                    counter = 0
+                fen += "/"
+            if i != "":
+                if counter > 0:
+                    fen += str(counter)
+                    counter = 0
+                fen += i
+            else:
+                counter += 1
+        if counter != 0:
+            fen += str(counter)
+        return fen
+
 #---- PROVES ---- ELIMINAR QUAN LA CLASSE ESTIGUI ACABADA.
 def main():
     #Exemple de com funciona:
     board = cv2.imread("./testpic/taulell.png")
     actual_board = cv2.imread("../../datasets/early-test/00001_post.png")
-    p = PieceDetector(board,'./checkpoint-100v2.pth')
-    p.detect_pieces(actual_board)
-
+    p = PieceDetector(board,'./GOD_checkpoint.pth')
+    fen = p.detect_pieces(actual_board)
+    print("")
+    print('FEN:', fen)
 
 if __name__ == "__main__":
     main()

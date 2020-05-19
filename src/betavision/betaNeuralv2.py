@@ -15,7 +15,7 @@ class CNN(nn.Module):
         self.conv1 = nn.Conv2d()
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d()
-        self.
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         pass

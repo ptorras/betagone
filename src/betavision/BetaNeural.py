@@ -52,16 +52,11 @@ def load_piece_dataset(pieces):
     return train_loader, test_loader, validate_loader
 
 def load_piece_dataset_v2():
-    training_transforms = transforms.Compose([transforms.RandomRotation(30),
-                                              transforms.RandomResizedCrop(224),
-                                              transforms.RandomHorizontalFlip(),
-                                              transforms.ToTensor(),
+    training_transforms = transforms.Compose([transforms.ToTensor(),
                                               transforms.Normalize([0.485, 0.456, 0.406],
                                                                    [0.229, 0.224, 0.225])])
 
-    validation_transforms = transforms.Compose([transforms.Resize(256),
-                                                transforms.CenterCrop(224),
-                                                transforms.ToTensor(),
+    validation_transforms = transforms.Compose([transforms.ToTensor(),
                                                 transforms.Normalize([0.485, 0.456, 0.406],
                                                                      [0.229, 0.224, 0.225])])
 
@@ -130,7 +125,7 @@ def validation(model, validateloader, criterion):
 
 def train_classifier(model, optimizer, criterion, train_loader, validate_loader):
 
-    epochs = 70
+    epochs = 25
     steps = 0
     print_every = 40
 
@@ -224,19 +219,19 @@ def process_image(pil_image):
 
     # Process a PIL image for use in a PyTorch model
 
-    # Resize
-    if pil_image.size[0] > pil_image.size[1]:
-        pil_image.thumbnail((5000, 256))
-    else:
-        pil_image.thumbnail((256, 5000))
-
-    # Crop
-    left_margin = (pil_image.width - 224) / 2
-    bottom_margin = (pil_image.height - 224) / 2
-    right_margin = left_margin + 224
-    top_margin = bottom_margin + 224
-
-    pil_image = pil_image.crop((left_margin, bottom_margin, right_margin, top_margin))
+    # # Resize
+    # if pil_image.size[0] > pil_image.size[1]:
+    #     pil_image.thumbnail((5000, 256))
+    # else:
+    #     pil_image.thumbnail((256, 5000))
+    #
+    # # Crop
+    # left_margin = (pil_image.width - 224) / 2
+    # bottom_margin = (pil_image.height - 224) / 2
+    # right_margin = left_margin + 224
+    # top_margin = bottom_margin + 224
+    #
+    # pil_image = pil_image.crop((left_margin, bottom_margin, right_margin, top_margin))
 
     # Normalize
     np_image = np.array(pil_image) / 255
@@ -257,8 +252,8 @@ def main():
     pieces_to_names = piece2name(pieces, colors)
 
     model = init_nd_config_model()
-    criterion = nn.NLLLoss()
-    optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.classifier.parameters(), lr=0.001, momentum=0.9)
 
     start = t.time()
     train_classifier(model, optimizer, criterion, train_loader, validate_loader)
@@ -269,7 +264,8 @@ def main():
 
     m, s = divmod(time, 60)
     h, m = divmod(m, 60)
-    print('{:d}:{:02d}:{:02d}'.format(h, m, s))
+
+    print('{:d}h:{:02d}m:{:02d}s'.format(int(h), int(m), int(s)))
 
     #test_accuracy(model, test_loader)
 
