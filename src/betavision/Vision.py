@@ -10,7 +10,7 @@ from torch import nn
 from torch import optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms, models
-
+import os
 
 class PieceDetector:
     def __init__(self, board_image:np.ndarray, chkp: str):
@@ -19,8 +19,6 @@ class PieceDetector:
 
         self.model = models.vgg16()
         self.checkpoint = torch.load(chkp)
-        #self.model.load_state_dict(self.checkpoint['model_state_dict'])
-        #self.model.eval()
         self.__load_checkpoint()
         self.piece_dict = self.__load_dict()
 
@@ -43,7 +41,7 @@ class PieceDetector:
 
         if self.checkpoint['arch'] == 'vgg16':
 
-            self.model = models.vgg16(pretrained=True)
+            self.model = models.vgg16(pretrained=False)
 
             for param in self.model.parameters():
                 param.requires_grad = False
@@ -119,9 +117,6 @@ class PieceDetector:
                 casella = img[y1:y2, x1:x2]
                 casella = cv2.resize(casella, dim)
                 boxes.append(casella)
-                # cv2.imshow('casella', casella)
-                # cv2.waitKey()
-        # cv2.destroyAllWindows()
 
         return np.asarray(boxes)
 
@@ -129,8 +124,10 @@ class PieceDetector:
         boxes = self.cut_boxes(actual_board)
         pieces = list()
 
+        if not os.path.exists("./temp"):
+            os.mkdir("./temp")
         for i, box in enumerate(boxes):
-            image_path = '../../datasets/actual-board/box_0'+str(i)+'.png'
+            image_path = './temp/'+str(i)+'.png'
             cv2.imwrite(image_path, box)
             pil_image = Image.open(image_path)
             top_probabilities, top_classes = self.predict(pil_image)
@@ -140,7 +137,8 @@ class PieceDetector:
         return self.position_to_fen(pieces)
 
     def predict(self, pil_image, topk=5):
-        ''' Predict the class (or classes) of an image using a trained deep learning model.
+        '''
+        Predict the class (or classes) of an image using a trained deep learning model.
         '''
 
         image = process_image(pil_image)
@@ -193,16 +191,3 @@ class PieceDetector:
         if counter != 0:
             fen += str(counter)
         return fen
-
-#---- PROVES ---- ELIMINAR QUAN LA CLASSE ESTIGUI ACABADA.
-def main():
-    #Exemple de com funciona:
-    board = cv2.imread("./testpic/taulell.png")
-    actual_board = cv2.imread("../../datasets/early-test/00001_post.png")
-    p = PieceDetector(board,'./GOD_checkpoint.pth')
-    fen = p.detect_pieces(actual_board)
-    print("")
-    print('FEN:', fen)
-
-if __name__ == "__main__":
-    main()

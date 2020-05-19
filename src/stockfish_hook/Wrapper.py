@@ -76,7 +76,7 @@ class Wrapper:
         for i in temp_board.legal_moves:
             temp_board.push(i)
             fen = temp_board.fen()
-            if fen[fen:fen.index(' ')] == post:
+            if fen[0:fen.index(' ')] == post:
                 return fen
             else:
                 temp_board.pop()

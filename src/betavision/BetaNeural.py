@@ -269,8 +269,3 @@ def main():
 
     #test_accuracy(model, test_loader)
 
-
-
-if __name__ == '__main__':
-    main()
-

@@ -13,6 +13,8 @@ def main():
     board_image_prior = plt.imread("../datasets/early-test/" + test + "_prior.png")
     board_image_post = plt.imread("../datasets/early-test/" + test + "_post.png")
 
+    board_cv2 = cv2.imread("../datasets/early-test/" + test + "_post.png")
+
     with open("../datasets/positions/" + test + "_prior.fen") as file_fen:
         board_fen_prior = file_fen.read()
 
@@ -29,7 +31,7 @@ def main():
 
     # Generar l'objecte de visio
     tauler_buit = cv2.imread("../datasets/pieces-full/empty.png")
-    vision_object = Vision.PieceDetector(tauler_buit, "./betavision/checkpoints/checkpoint.pth")
+    vision_object = Vision.PieceDetector(tauler_buit, "./betavision/checkpoints/GOD_checkpoint.pth")
 
     # Generar el motor de joc
     engine = Wrapper("./stockfish_hook/stockfish-11-win/Windows/stockfish_20011801_x64.exe", 1)
@@ -38,10 +40,11 @@ def main():
     route_maker = Route(board_fen_post)
 
     # Detectar la posicio del tauler
-    position = vision_object.detect_pieces(board_image_post)
+    position = vision_object.detect_pieces(board_cv2)
+    position = engine.check_compatible(board_fen_prior, position)
 
     # Verificar que les posicions son compatibles
-    if engine.check_compatible(board_fen_prior, position) is None:
+    if position is None:
         print("Posicio Incompatible")
         exit(-1)
 
