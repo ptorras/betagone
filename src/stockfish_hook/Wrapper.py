@@ -48,7 +48,10 @@ class Wrapper:
         ret_move += "["
         if self.board.is_capture(move):
             ret_move += 'x'
-            piece = chess.piece_symbol(self.board.piece_type_at(chess.square(int(ret_move[2]), int(ret_move[3]))))
+            if not self.board.is_en_passant(move):
+                piece = chess.piece_symbol(self.board.piece_type_at(chess.square(int(ret_move[2]), int(ret_move[3]))))
+            else:
+                piece = 'p' if self.board.turn == 'WHITE' else 'P'
             ret_move += piece.upper() if self.board.turn == chess.BLACK else piece.lower()
             if self.board.is_en_passant(move):
                 ret_move += "e"

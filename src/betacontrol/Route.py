@@ -126,7 +126,7 @@ class Route:
             elif captura and alpas:
                 piece = move[move.find('x') + 1]
                 dest = self.find_empty_pos(piece)
-                alpas = np.array([dest[0], int(move[move.find('e')+1])])
+                alpas = np.array([(7-int(move[move.find('e')+2]))*2, int(move[move.find('e')+1])*2])
                 full_route += self.route_segment(self.ORIGEN_MOVIMENT, alpas, False)
                 full_route += self.route_segment(alpas, dest, True)
                 full_route += self.route_segment(dest, abs_origen, False)
