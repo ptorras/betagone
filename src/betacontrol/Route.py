@@ -15,7 +15,7 @@ class Route:
     MANHATTAN_DIRECTIONS = [DIR_NORTH, DIR_EAST, DIR_SOUTH, DIR_WEST]
     FULL_DIRECTIONS = [DIR_NORTH, DIR_NE, DIR_EAST, DIR_SE, DIR_SOUTH, DIR_SW, DIR_WEST, DIR_NW]
 
-    DIRECTIONS = MANHATTAN_DIRECTIONS
+    DIRECTIONS = FULL_DIRECTIONS
 
     PIECE_POSITIONS = {
         "p": [(2, x) for x in range(8)],
@@ -95,6 +95,8 @@ class Route:
         -------
         list: np.ndarray
             Llista d'increments en les coordenades per dur a terme la ruta
+        list: bool
+            Llista de passos pels quals l'imant estara ences
         """
         full_route = []
         captura = True if "x" in move else False
@@ -142,7 +144,8 @@ class Route:
                 full_route += self.route_segment(dest_dead, abs_dest, True)
 
             full_route += self.route_segment(abs_dest, self.ORIGEN_MOVIMENT, False)
-        return full_route
+        full_route, magnet = map(list, zip(*full_route))
+        return full_route, magnet
 
     def route_matrix(self, origin: np.ndarray, destination: np.ndarray, magnet: bool = False):
         """
@@ -218,9 +221,10 @@ class Route:
 
         Returns
         -------
-        list: np.ndarray
+        list: tuple (np.ndarray, bool)
             Llista de passos a seguir per arribar de l'origen a la destinació
             (codificats com a vectors de la forma [x, y] on x,y [-{-1, 0, 1})
+            El boolea es l'imant
         """
         matrix = self.route_matrix(origin, destination, magnet)
         position = np.copy(destination)
@@ -230,10 +234,20 @@ class Route:
             moves = [direction for direction in self.DIRECTIONS
                      if not np.any(self.WAVEFRONT_ZERO > position + direction)
                      and not np.any(position + direction >= self.WAVEFRONT_SIZE)]
-            step = [move for move in moves if np.all(matrix[(position+move)[0],
-                                                            (position+move)[1]] == matrix[position[0], position[1]] - 1)][0]
-            route.insert(0,-step)
-            position += step
+            steps = [move for move in moves if np.all(matrix[(position+move)[0],
+                                                             (position+move)[1]] == matrix[position[0], position[1]] - 1)]
+
+            min = steps[0]
+            mindist = np.inf
+            for i in steps:
+                nextpos = position + i
+                nextdist = np.linalg.norm(destination - nextpos)
+                if nextdist < mindist:
+                    min = i
+                    mindist = nextdist
+
+            route.insert(0,(- min, magnet))
+            position += min
         return route
 
     def set_occupied(self) -> np.ndarray:
@@ -254,7 +268,7 @@ class Route:
                     occuppied[2*j, i + 16] = 1
         return occuppied
 
-    def draw_route(self, route: list, board_image: np.ndarray):
+    def draw_route(self, route: list, board_image: np.ndarray, magnet: list):
         """
         Representa el moviment sobre una de les imatges del dataset (calibrat
         amb els renders de /datasets/early-test
@@ -269,14 +283,13 @@ class Route:
         plt.figure(figsize=(12, 8))
         plt.imshow(board_image)
         current_position = np.copy(self.ORIGEN_IMATGE)
-        for num, i in enumerate(route):
+        for num, (i, mag) in enumerate(zip(route, magnet)):
             increment = np.multiply(i, self.MIDA_QUADRAT)
             plt.arrow(current_position[1], current_position[0], increment[1], increment[0], shape="left",
-                      length_includes_head=True, width=0.5, color='b')
-            plt.text(current_position[1] - 25, current_position[0], str(num), color='b')
+                      length_includes_head=True, width=0.5, color='b' if not mag else 'y', zorder=20 if mag else 10)
+            plt.text(current_position[1] - 25, current_position[0], str(num), color='b' if not mag else 'y')
             current_position = current_position + increment
         plt.show()
-
 
     def find_empty_pos(self, symbol: str) -> np.ndarray:
         """

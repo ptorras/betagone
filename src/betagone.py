@@ -1,14 +1,15 @@
 from stockfish_hook.Wrapper import Wrapper
-from betavision import *
+from betavision import Vision
 import matplotlib.pyplot as plt
 from betacontrol.Route import Route
 import numpy as np
+import cv2
 
 
 def main():
 
     # Carregar els fitxer de test corresponent
-    test = "00001"
+    test = "00006"
 
     board_image_prior = plt.imread("../datasets/early-test/" + test + "_prior.png")
     board_image_post = plt.imread("../datasets/early-test/" + test + "_post.png")
@@ -28,7 +29,8 @@ def main():
     plt.show()
 
     # Generar l'objecte de visio
-
+    tauler_buit = cv2.imread("../datasets/pieces-full/empty.png")
+    #vision_object = Vision.PieceDetector(tauler_buit, "./betavision/checkpoints/checkpoint.pth")
 
     # Generar el motor de joc
     engine = Wrapper("./stockfish_hook/stockfish-11-win/Windows/stockfish_20011801_x64.exe", 1)
@@ -37,8 +39,7 @@ def main():
     route_maker = Route(board_fen_post)
 
     # Detectar la posicio del tauler
-
-
+    #position = vision_object.detect_pieces(board_image_post)
 
     # Verificar que les posicions son compatibles
 
@@ -51,8 +52,8 @@ def main():
     engine.shutdown()
 
     # Calcular la ruta a seguir
-    ruta = route_maker.route_calculate(strmove)
-    route_maker.draw_route(ruta, board_image_post)
+    ruta, magnet = route_maker.route_calculate(strmove)
+    route_maker.draw_route(ruta, board_image_post, magnet)
 
     # Fer la ruta
     pass
