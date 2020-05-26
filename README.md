@@ -1,4 +1,4 @@
-# betagone
+# BetaGone
 An autonomous vision-based chess robot
 
 This currently uses Stockfish 11 for move generation: https://github.com/official-stockfish/Stockfish
