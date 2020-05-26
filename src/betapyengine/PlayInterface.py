@@ -236,3 +236,6 @@ class PlayInterface:
 
     def onQuit(self):
         self.main_window.quit()
+
+if __name__ == "__main__":
+    p = PlayInterface()

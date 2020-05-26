@@ -9,7 +9,7 @@ import cv2
 def main():
 
     # Carregar els fitxer de test corresponent
-    test = "00007"
+    test = "00003"
 
     board_image_prior = plt.imread("../datasets/early-test/" + test + "_prior.png")
     board_image_post = plt.imread("../datasets/early-test/" + test + "_post.png")
