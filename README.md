@@ -40,6 +40,8 @@ It requires the training file found in:
 https://drive.google.com/file/d/1PoyffO24l5NU2To7iiBJyxoi_xcCpGo3/view
 It has to be saved inside src/betavision/checkpoints
 
+![Hough Lines detection](betagone/src/betavision/lines_board.gif)
+
 #### stockfish-hook
 The current implementation uses Stockfish 11 through python-chess, but with a couple
 tweaks it can use any UCI. We plan to finish betaengine and wrap it through this module
